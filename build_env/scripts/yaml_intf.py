@@ -65,7 +65,10 @@ def get_master_location(yaml_reader):
     return yaml_reader["hw"]["master_location"]
 
 def get_processor_arch(yaml_reader):
-    return yaml_reader["hw"]["processor_arch"]
+    try:
+        return yaml_reader["hw"]["processor_arch"]
+    except:
+        return "plasma"
 
 def get_mapping_algorithm(yaml_reader):
     return yaml_reader["sw"]["mapping_algorithm"]
