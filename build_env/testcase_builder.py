@@ -75,6 +75,7 @@ def main():
     model_description = get_model_description(yaml_reader)
     page_size_KB = get_page_size_KB(yaml_reader)
     memory_size_KB = get_memory_size_KB(yaml_reader)
+    processor_arch = get_processor_arch(yaml_reader)
     
     
     #Testcase generation: updates source files...
@@ -82,7 +83,7 @@ def main():
     copy_kernel( HEMPS_PATH,  TESTCASE_NAME)
     copy_apps( HEMPS_PATH,  TESTCASE_NAME,  apps_name_list)
     copy_hardware( HEMPS_PATH,  TESTCASE_NAME, model_description)
-    copy_makefiles( HEMPS_PATH,  TESTCASE_NAME, page_size_KB, memory_size_KB, model_description, apps_name_list, simul_time)
+    copy_makefiles( HEMPS_PATH,  TESTCASE_NAME, page_size_KB, memory_size_KB, model_description, apps_name_list, simul_time, processor_arch)
     copy_testcase_file( TESTCASE_NAME, INPUT_TESTCASE_FILE_PATH)
     
     #Create other importatants dirs
@@ -184,14 +185,14 @@ def copy_hardware(hemps_path, testcase_path, system_model_description):
     
     generic_copy(source_hw_path, testcase_hw_path, ignored_names_list)
 
-def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, system_model_description, apps_list, simul_time):
+def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, system_model_description, apps_list, simul_time, processor_arch):
      #--------------  COPIES THE MAKEFILE TO SOFTWARE DIR ----------------------------------
    
     makes_dir = hemps_path+"/build_env/makes"
     
     if system_model_description == "sc":
         
-        copyfile(makes_dir+"/make_systemc", testcase_path+"/hardware/makefile")
+        copyfile(makes_dir+"/"+processor_arch+"/make_systemc", testcase_path+"/hardware/makefile")
         
         if os.path.isfile(testcase_path+"/sim.do"):
             os.remove(testcase_path+"/sim.do") 
@@ -228,7 +229,7 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, syst
         
     copyfile(makes_dir+"/make_testcase", testcase_path+"/makefile")
     
-    copyfile(makes_dir+"/make_kernel", testcase_path+"/software/makefile")
+    copyfile(makes_dir+"/"+processor_arch+"/make_kernel", testcase_path+"/software/makefile")
     
      #Open the file (closing after scope) to append the PAGE_SP_INIT and MEM_SP_INIT value
     make_file_path = testcase_path + "/software/makefile"
@@ -246,7 +247,7 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, syst
         
         make_app_path = testcase_path+"/applications/"+app_name+"/makefile"
         
-        copyfile(makes_dir+"/make_app", make_app_path)
+        copyfile(makes_dir+"/"+processor_arch+"/make_app", make_app_path)
         
         line = "PAGE_SP_INIT = "+ str((page_size_KB  *  1024) - 1) + "\n"
         

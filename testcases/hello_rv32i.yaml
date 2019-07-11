@@ -1,0 +1,14 @@
+hw:
+  page_size_KB: 32
+  tasks_per_PE: 1           # Typical: 1 - 6
+  repository_size_MB: 1     
+  model_description: sc     # sc (gcc) | scmod (ModelSim) | vhdl (ModelSim)
+  noc_buffer_size: 8        # Typical: 8, must be power of 2
+  mpsoc_dimension: [2,2]    # Minimal: [2,2], must be square
+  cluster_dimension: [2,2]  # Must be square, less or equal to mpsoc_dimension
+  master_location: LB       # Must be LB
+  processor_arch: plasma    # plasma (MIPS I-like) | rv32i (RISC-V)
+
+apps: 
+  - name: hello_world_app
+    start_time_ms: 5

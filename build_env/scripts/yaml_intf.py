@@ -64,6 +64,9 @@ def get_cluster_y_dim(yaml_reader):
 def get_master_location(yaml_reader):
     return yaml_reader["hw"]["master_location"]
 
+def get_processor_arch(yaml_reader):
+    return yaml_reader["hw"]["processor_arch"]
+
 def get_mapping_algorithm(yaml_reader):
     return yaml_reader["sw"]["mapping_algorithm"]
 
