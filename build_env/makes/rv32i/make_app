@@ -3,14 +3,12 @@ NC   =\033[0m # No Color
 
 INCLUDE           = ../../software/include
 
-CFLAGS            = -O2 -Wall -c -std=c99
-#CFLAGS 		 += -fms-extensions -s
-GCC		          = riscv-sifive-elf-gcc $(CFLAGS)
-AS	          	  = riscv-sifive-elf-as -march=rv32i
+CFLAGS            = -O2 -Wall -std=c99 -s
+GCC		          = riscv-sifive-elf-gcc -march=rv32im
+AS	          	  = riscv-sifive-elf-as -march=rv32im
 LD		          = riscv-sifive-elf-ld
 DUMP	          = riscv-sifive-elf-objdump
 COPY	          = riscv-sifive-elf-objcopy -O binary
-
 BOOT_TASK         = boot_task
 BOOT_TASK_SRC     = ../../software/boot_task/rv32i/boot_task.asm
 
@@ -21,17 +19,17 @@ default: $(BOOT_TASK).o $(TASK_OBJ)
 
 boot_task.o: $(BOOT_TASK_SRC)
 	@printf "${GREEN}Compiling boot task: %s ...${NC}\n" "$*.c"
-	$(AS) --defsym sp_addr=$(PAGE_SP_INIT) -o $@ $^
+	@$(AS) --defsym sp_addr=$(PAGE_SP_INIT) -o $@ $^
 
 #[$*] - only the filename - #https://www.gnu.org/software/make/manual/make.html#Automatic-Variables
 $(TASK_OBJ): $(TASK_SRC) 
 	@printf "${GREEN}Compiling task: %s ...${NC}\n" "$*.c"
-	$(GCC_MIPS) $(CFLAGS) $*.c -o $*.o --include id_tasks.h -I $(INCLUDE)
-	$(LD_MIPS) -Ttext 0 -eentry -Map $*.map -s -N -o $*.bin $(BOOT_TASK).o $*.o
-	$(LD_MIPS) -Ttext 0 -eentry -Map $*_debug.map -o $*_debug.bin $(BOOT_TASK).o $*.o
-	$(DUMP_MIPS) -S $*_debug.bin > $*.lst
-	$(COPY_MIPS) $*.bin $*.dump
-	hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $*.dump > $*.txt
+	@$(GCC) $(CFLAGS) -c $*.c -o $*.o --include id_tasks.h -I $(INCLUDE)
+	@$(LD) -Ttext 0 -eboot_task -Map $*.map -s -N -o $*.bin $(BOOT_TASK).o $*.o
+	@$(LD) -Ttext 0 -eboot_task -Map $*_debug.map -o $*_debug.bin $(BOOT_TASK).o $*.o
+	@$(DUMP) -S $*_debug.bin > $*.lst
+	@$(COPY) $*.bin $*.dump
+	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $*.dump > $*.txt
 
 clean:
 	@printf "Cleaning up\n"
@@ -41,4 +39,3 @@ clean:
 	@rm -rf *.lst
 	@rm -rf *.txt
 	@rm -rf *.dump
-
