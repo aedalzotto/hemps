@@ -15,8 +15,15 @@
 
 
 #include "pending_service.h"
-#include "../include/plasma.h"
 #include "utils.h"
+
+#ifdef __mips__
+	#include "../include/plasma.h"
+#elif defined(__riscv)
+	#include "../include/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
 
 ServiceHeader pending_services_FIFO[PENDING_SERVICE_TAM];	//!<pending services array declaration
 

@@ -12,8 +12,15 @@
  */
 
 #include "communication.h"
-#include "../include/plasma.h"
 #include "utils.h"
+
+#ifdef __mips__
+	#include "../include/plasma.h"
+#elif defined(__riscv)
+	#include "../include/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
 
 PipeSlot pipe[PIPE_SIZE];						//!< pipe array
 

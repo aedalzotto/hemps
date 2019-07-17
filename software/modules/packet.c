@@ -15,7 +15,14 @@
  */
 
 #include "packet.h"
-#include "../include/plasma.h"
+
+#ifdef __mips__
+	#include "../include/plasma.h"
+#elif defined(__riscv)
+	#include "../include/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
 
 ServiceHeaderSlot sh_slot1, sh_slot2;	//!<Slots to prevent memory writing while is sending a packet
 

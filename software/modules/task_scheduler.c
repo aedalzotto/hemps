@@ -17,10 +17,17 @@
 
 #include "task_scheduler.h"
 #include "../../include/kernel_pkg.h"
-#include "../include/plasma.h"
 #include "../include/services.h"
 #include "packet.h"
 #include "utils.h"
+
+#ifdef __mips__
+	#include "../include/plasma.h"
+#elif defined(__riscv)
+	#include "../include/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
 
 Scheduling scheduling[MAX_LOCAL_TASKS];		//!<Scheduling array with its size equal to the max number of task that can execute into the processor
 

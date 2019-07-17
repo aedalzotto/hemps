@@ -25,7 +25,6 @@ KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c
 KERNEL_MASTER_H	  = kernel/slave/kernel_slave.h
 
 #https://www.gnu.org/software/make/manual/make.html#Automatic-Variables
-
 MODULES_DIR = modules/
 MODULES_NAMES = utils packet applications pending_service reclustering new_task communication processors task_control task_location task_migration task_scheduler resource_manager
 MODULES_SRC = $(addsuffix .c, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) ) $(addsuffix .h, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
