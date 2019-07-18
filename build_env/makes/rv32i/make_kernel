@@ -7,7 +7,7 @@ KERNEL_PKG_SRC    = $(KERNEL_PKG_TGT:.o=.c) $(KERNEL_PKG_TGT:.o=.h)
 CFLAGS				= -O2 -Wall -s -std=c99
 #CFLAGS			   += -fms-extensions
 GCC					= riscv-sifive-elf-gcc -march=rv32im
-AS_MIPS           = mips-elf-as
+AS_MIPS				= riscv-sifive-elf-as -march=rv32im
 LD_MIPS           = mips-elf-ld
 DUMP_MIPS         = mips-elf-objdump
 COPY_MIPS         = mips-elf-objcopy -O binary
@@ -48,7 +48,7 @@ $(MODULES_TGT): $(MODULES_SRC)
 
 $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
-	$(AS_MIPS) --defsym sp_addr=$(MEM_SP_INIT) -o $(BOOT_MASTER).o $(BOOT_MASTER_SRC)
+	$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
 	$(GCC_MIPS) -DHOP_NUMBER=1 -Dload -o $(KERNEL_MASTER).o $(KERNEL_MASTER_SRC) -D IS_MASTER
 	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
 	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
