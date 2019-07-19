@@ -13,7 +13,7 @@ DUMP_MIPS         = mips-elf-objdump
 COPY_MIPS         = mips-elf-objcopy -O binary
 
 BOOT_MASTER       = boot_master
-BOOT_MASTER_SRC   = kernel/master/boot.S
+BOOT_MASTER_SRC   = kernel/master/rv32i/boot.S
 KERNEL_MASTER 	  = kernel_master
 KERNEL_MASTER_SRC = kernel/master/kernel_master.c 
 KERNEL_MASTER_H	  = kernel/master/kernel_master.h
