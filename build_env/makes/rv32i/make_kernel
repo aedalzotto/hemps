@@ -50,13 +50,13 @@ $(MODULES_TGT): $(MODULES_SRC)
 
 $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
-	$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
-	$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
-	$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	$(DUMP) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
-	$(COPY) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
-	hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
+	@$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
+	@$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
+	@$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	@$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	@$(DUMP) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
+	@$(COPY) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
+	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
 
 $(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC)
 	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
