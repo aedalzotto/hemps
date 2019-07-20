@@ -7,21 +7,21 @@ KERNEL_PKG_SRC    = $(KERNEL_PKG_TGT:.o=.c) $(KERNEL_PKG_TGT:.o=.h)
 CFLAGS				= -O2 -Wall -s -std=c99
 #CFLAGS			   += -fms-extensions
 GCC					= riscv-sifive-elf-gcc -march=rv32im
-AS_MIPS				= riscv-sifive-elf-as -march=rv32im
-LD_MIPS           = mips-elf-ld
-DUMP_MIPS         = mips-elf-objdump
-COPY_MIPS         = mips-elf-objcopy -O binary
+AS					= riscv-sifive-elf-as -march=rv32im
+LD					= riscv-sifive-elf-ld
+DUMP				= riscv-sifive-elf-objdump
+COPY				= riscv-sifive-elf-objcopy -O binary
 
 BOOT_MASTER       = boot_master
 BOOT_MASTER_SRC   = kernel/master/rv32i/boot.S
 KERNEL_MASTER 	  = kernel_master
-KERNEL_MASTER_SRC = kernel/master/kernel_master.c 
+KERNEL_MASTER_SRC = kernel/master/kernel_master.c
 KERNEL_MASTER_H	  = kernel/master/kernel_master.h
 
 BOOT_SLAVE        = boot_slave
 BOOT_SLAVE_SRC	  = kernel/slave/boot.S
 KERNEL_SLAVE 	  = kernel_slave
-KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c 
+KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c
 KERNEL_MASTER_H	  = kernel/slave/kernel_slave.h
 
 #https://www.gnu.org/software/make/manual/make.html#Automatic-Variables
@@ -36,6 +36,8 @@ KERNEL_MASTER_TGT     = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_MAS
 KERNEL_SLAVE_MODULES = utils packet pending_service communication task_control task_location task_migration task_scheduler
 KERNEL_SLAVE_TGT 	 = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_SLAVE_MODULES) ) )
 
+$(info $(KERNEL_MASTER_TGT))
+
 default: $(KERNEL_MASTER).txt $(KERNEL_SLAVE).txt 
 
 $(KERNEL_PKG_TGT): $(KERNEL_PKG_SRC)
@@ -49,11 +51,11 @@ $(MODULES_TGT): $(MODULES_SRC)
 $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
-	$(GCC_MIPS) -DHOP_NUMBER=1 -Dload -o $(KERNEL_MASTER).o $(KERNEL_MASTER_SRC) -D IS_MASTER
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	$(DUMP_MIPS) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
-	$(COPY_MIPS) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
+	$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
+	$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	$(DUMP) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
+	$(COPY) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
 	hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
 
 $(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC)

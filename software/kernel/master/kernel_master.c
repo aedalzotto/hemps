@@ -21,7 +21,6 @@
 #include "kernel_master.h"
 
 #include "../../modules/utils.h"
-#include "../../include/plasma.h"
 #include "../../include/services.h"
 #include "../../modules/packet.h"
 #include "../../modules/new_task.h"
@@ -29,6 +28,14 @@
 #include "../../modules/reclustering.h"
 #include "../../modules/applications.h"
 #include "../../modules/processors.h"
+
+#ifdef __mips__
+	#include "../../include/plasma.h"
+#elif defined(__riscv)
+	#include "../../include/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
 
 
 /*Local Manager (LM) global variables*/
