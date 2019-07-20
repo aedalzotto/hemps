@@ -19,7 +19,7 @@ KERNEL_MASTER_SRC = kernel/master/kernel_master.c
 KERNEL_MASTER_H	  = kernel/master/kernel_master.h
 
 BOOT_SLAVE        = boot_slave
-BOOT_SLAVE_SRC	  = kernel/slave/boot.S
+BOOT_SLAVE_SRC	  = kernel/slave/rv32i/boot.S
 KERNEL_SLAVE 	  = kernel_slave
 KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c
 KERNEL_MASTER_H	  = kernel/slave/kernel_slave.h
