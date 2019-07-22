@@ -220,8 +220,8 @@ ASM_RunScheduledTask:
 	lw		t4,112(t6)		# reg[28] = t4
 	lw		t5,116(t6)		# reg[29] = t5
 	lw		t6,120(t6)		# reg[30] = t6
-	lw		pc,124(t6)		# TODO: loads pc of the task that will run
-	lw		t6,128(t6)		# TODO: loads offset of the task (for paging setup)
+	#lw		pc,124(t6)		# TODO: loads pc of the task that will run
+	#lw		t6,128(t6)		# TODO: loads offset of the task (for paging setup)
 
 	#li		$1,0x1
 	#mtc0	t6,$10			# TODO: load offset of task to c0's EntryHi
