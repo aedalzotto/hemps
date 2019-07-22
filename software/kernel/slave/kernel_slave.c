@@ -21,7 +21,6 @@
 
 #include "../../../include/kernel_pkg.h"
 #include "../../include/api.h"
-#include "../../include/plasma.h"
 #include "../../include/services.h"
 #include "../../modules/task_location.h"
 #include "../../modules/packet.h"
@@ -31,6 +30,14 @@
 #include "../../modules/utils.h"
 #if MIGRATION_ENABLED
 #include "../../modules/task_migration.h"
+#endif
+
+#ifdef __mips__
+	#include "../../include/plasma.h"
+#elif defined(__riscv)
+	#include "../../include/riscv.h"
+#else
+	#error Unsupported targed architecture
 #endif
 
 //Globals
