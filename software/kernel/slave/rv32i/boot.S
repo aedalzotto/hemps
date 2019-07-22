@@ -11,79 +11,75 @@
 
 .globl boot_slave
 boot_slave:
-	li 		sp,sp_addr
-	jal 	main
+	li		sp,sp_addr
+	jal		main
 $L1:
 	j		$L1
 
 #########################
 
-.org 0x3c
-#address 0x3c
+.org 0x3c # ISR address. Is this valid?
 interrupt_service_routine_entry:  
-        j       interrupt_service_routine
-        nop
+	j		interrupt_service_routine
 
-#address 0x44
+.org 0x44 # ECALL address? Is this valid?
 system_service_routine_entry:  
-        j       system_service_routine 
-        nop
+	j		system_service_routine
 
-#address 0x4c
 interrupt_service_routine:
 
-        #REGISTERS $26 AND $27 ARE RESERVED FOR THE OS  
-        #la      $26,needTaskScheduling
-        #sw      $0,0($26)       
+	# REGISTERS $26 AND $27 ARE RESERVED FOR THE OS in Plasma Core
+	# They are the registers k0 and k1 (Reserved for interrupt handler)
+	# RISC-V temporary: s10 s11? or maybe look priviledged ISA manual?
+	#la		$26,needTaskScheduling
+	#sw		$0,0($26)
 
-        #SAVE ra AND REGISTERS
-        la      $27,current
-        lw      $27,0($27)
+	# SAVE ra AND REGISTERS
+	la		s10,current		# Load address "current" to s10
+	lw		s10,0(s10)		# Load word from address s10+0 to s10
                                    
-        sw      $2,0($27)       # reg[0] = $v0
-        sw      $3,4($27)       # reg[1] = $v1
-        sw      $4,8($27)       # reg[2] = $a0
-        sw      $5,12($27)      # reg[3] = $a1
-        sw      $6,16($27)      # reg[4] = $a2
-        sw      $7,20($27)      # reg[5] = $a3
-        sw      $8,24($27)      # reg[6] = $t0
-        sw      $9,28($27)      # reg[7] = $t1
-        sw      $10,32($27)     # reg[8] = $t2
-        sw      $11,36($27)     # reg[9] = $t3
-        sw      $12,40($27)     # reg[10] = $t4
-        sw      $13,44($27)     # reg[11] = $t5
-        sw      $14,48($27)     # reg[12] = $t6
-        sw      $15,52($27)     # reg[13] = $t7
-        sw      $16,56($27)     # reg[14] = $s0
-        sw      $17,60($27)     # reg[15] = $s1
-        sw      $18,64($27)     # reg[16] = $s2
-        sw      $19,68($27)     # reg[17] = $s3
-        sw      $20,72($27)     # reg[18] = $s4
-        sw      $21,76($27)     # reg[19] = $s5
-        sw      $22,80($27)     # reg[20] = $s6
-        sw      $23,84($27)     # reg[21] = $s7
-        sw      $24,88($27)     # reg[22] = $t8
-        sw      $25,92($27)     # reg[23] = $t9
-#        sw      $28,96($27)     # reg[24] = $gp
-        sw      $29,100($27)    # reg[25] = $sp
-        sw      $30,104($27)    # reg[26] = $s8
-        sw      $31,108($27)    # reg[27] = $ra
-        mfhi    $26
-        sw      $26,112($27)    # reg[28] = $hi
-        mflo    $26
-        sw      $26,116($27)    # reg[29] = $lo
-        mfc0    $26,$14                 
-        sw      $26,120($27)    # reg[30] = save PC
+	sw		ra,0(s10)		# reg[0] = ra
+	sw		sp,4(s10)		# reg[1] = sp
+	sw		gp,8(s10)		# reg[2] = gp
+	sw		tp,12(s10)		# reg[3] = tp
+	sw		t0,16(s10)		# reg[4] = t0
+	sw		t1,20(s10)		# reg[5] = t1
+	sw		t2,24(s10)		# reg[6] = t2
+	sw		s0,28(s10)		# reg[7] = s0
+	sw		s1,32(s10)		# reg[8] = s1
+	sw		a0,36(s10)		# reg[9] = a0
+	sw		a1,40(s10)		# reg[10] = a1
+	sw		a2,44(s10)		# reg[11] = a2
+	sw		a3,48(s10)		# reg[12] = a3
+	sw		a4,52(s10)		# reg[13] = a4
+	sw		a5,56(s10)		# reg[14] = a5
+	sw		a6,60(s10)		# reg[15] = a6
+	sw		a7,64(s10)		# reg[16] = a7
+	sw		s2,68(s10)		# reg[17] = s2
+	sw		s3,72(s10)		# reg[18] = s3
+	sw		s4,76(s10)		# reg[19] = s4
+	sw		s5,80(s10)		# reg[20] = s5
+	sw		s6,84(s10)		# reg[21] = s6
+	sw		s7,88(s10)		# reg[22] = s7
+	sw		s8,92(s10)		# reg[23] = s8
+	sw		s9,96(s10)		# reg[24] = s9
+    sw		s10,100(s10)	# reg[25] = s10
+	sw		s11,104(s10)	# reg[26] = s11
+	sw		t3,108(s10)		# reg[27] = t3
+	sw		t4,112(s10)		# reg[28] = t4
+	sw		t5,116(s10)		# reg[29] = t5
+	sw		t6,120(s10)		# reg[30] = t6
+       
+	# reg[31] = save EPC
+	
+	li		sp,sp_addr
 
-
-        li $sp,sp_addr
-        
-        #JUMP TO INTERRUPT SERVICE ROUTINE
-        lui     $5,0x2000    
-        lw      $4,0x20($5)     #IRQ_STATUS
-        lw      $6,0x10($5)     #IRQ_MASK
-        jal     OS_InterruptServiceRoutine
-        and     $4,$4,$6
+	#JUMP TO INTERRUPT SERVICE ROUTINE
+	lui		a1,0x2000
+	lw		a0,0x20(a1)     #IRQ_STATUS
+	lw		a2,0x10(a1)     #IRQ_MASK
+	and		a0,a0,a2
+	jal		OS_InterruptServiceRoutine
 
 ####################################################
 
