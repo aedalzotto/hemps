@@ -18,14 +18,18 @@
 //#include <math.h>
 //#include "../../../standards.h"
 
+static const uint32_t TRAP_BASE_ADDR = 0x44;
+
 static const int FLIT_SIZE = 32;
 static const int HALF_FLIT = FLIT_SIZE/2;
+
+static const uint32_t TRAP_BASE_SHIFT = 2;
 
 enum class PRIV : uint32_t {
     USER,
     SUPERVISOR,
-    RESERVED,
-    MACHINE
+
+    MACHINE = 3
 };
 
 enum class XLEN : uint32_t {
@@ -70,12 +74,41 @@ enum class STATUS : uint32_t {
     SPIE = 1 << 5,
     MPIE = 1 << 7,
 
-    SPP_SHIFT = 8,
+    SPP = 1 << 8,
     MPP_SHIFT = 11, 
 
     MPRV = 1 << 17,
 
-    MXR = 1 << 19
+    MXR = 1 << 19,
+    SUM = 1 << 18,
+
+    TVM = 1 << 20,
+    TW  = 1 << 21,
+    TSR = 1 << 22,
+
+    FS_SHIFT = 13,
+    XS_SHIFT = 15,
+
+    SD = 1 << 31
+};
+
+enum class TRAP_MODE : uint32_t {
+    DIRECT,
+    VECTORED
+};
+
+enum class INTR_TYPE : uint32_t {
+    USI,
+    SSI,
+    MSI=3,
+
+    UTI,
+    STI,
+    MTI=7,
+
+    UEI,
+    SEI,
+    MEI=11
 };
 
 typedef sc_uint<HALF_FLIT> half_flit_t;
@@ -89,9 +122,6 @@ typedef struct _state {
    uint32_t global_inst_reg; // ?
    uint32_t epc;     // Exception program counter. Does it exists in RISC-V?
 } state_t;
-
-
-
 
 SC_MODULE(Rv32i){
 
@@ -119,6 +149,10 @@ SC_MODULE(Rv32i){
 
         uint32_t mstatus = (uint32_t)STATUS::MIE | (uint32_t)STATUS::MPIE;
         uint32_t misa = (uint32_t)XLEN::MXL_32 | (uint32_t)EXT::I | (uint32_t)EXT::M;
+        //uint32_t medeleg;     // Only if S-Mode is implemented
+        //uint32_t mideleg;     // Only if S-Mode is implemented
+
+        uint32_t mtvec = TRAP_BASE_ADDR << TRAP_BASE_SHIFT | (uint32_t)TRAP_MODE::DIRECT;
 
     };
 
