@@ -149,11 +149,12 @@ SC_MODULE(Rv32i){
 
         uint32_t mstatus = (uint32_t)STATUS::MIE | (uint32_t)STATUS::MPIE;
         uint32_t misa = (uint32_t)XLEN::MXL_32 | (uint32_t)EXT::I | (uint32_t)EXT::M;
-        //uint32_t medeleg;     // Only if S-Mode is implemented
-        //uint32_t mideleg;     // Only if S-Mode is implemented
-
+        uint32_t medeleg;
+        uint32_t mideleg;
+        uint32_t mie;
         uint32_t mtvec = TRAP_BASE_ADDR << TRAP_BASE_SHIFT | (uint32_t)TRAP_MODE::DIRECT;
 
+        uint32_t mip;
     };
 
 // ISS variables
