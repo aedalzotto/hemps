@@ -1,27 +1,63 @@
 /**
+ * @file riscv.cpp
+ * 
  * @author
  * Angelo Elias Dalzotto (150633@upf.br)
  * UPF - Universidade de Passo Fundo (upf.br)
  * 
  * @brief
- * Source file for the RISC-V RV32I Instruction Set Simulator (ISS).
- * Decode -> Execute -> Write back.
+ * Source file for a generic RISC-V CPU ISS running a RV32I ISA
+ * with M/S/U privileges.
  */
 
-#include "rv32i.h"
+#include "riscv.h"
 
-/**  Copoprocessor 0 registers map ?????
- *		- $10: page
- *		- $12: intr_enable
- *		- $14: state->epc
- *		- $16: global_inst
- */
-
-/* OBS: 'mem_pause' input stalls the CPU ONLY when executing memory acess (Load/Store) */
-
-#ifdef MTI_SYSTEMC // ?
-SC_MODULE_EXPORT(mlite_cpu);
+#ifdef MTI_SYSTEMC
+SC_MODULE_EXPORT(RiscV);
 #endif
+
+RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) : 
+				sc_module(name_), router_addr(router_addr_)
+{
+	SC_THREAD(cpu);
+	sensitive << clock.pos() << mem_pause.pos();
+	sensitive << mem_pause.neg();
+}
+
+void RiscV::cpu()
+{
+
+	while(true) {
+
+		if(reset_in.read()){
+			reset();
+		}
+
+		sc_uint<XLEN> instr = fetch();
+
+	}
+
+}
+
+void RiscV::reset()
+{
+	pc = 0;
+	for(int i = 0; i < 32; i++)
+		x[i] = 0;
+}
+
+sc_uint<XLEN> fetch()
+{
+	sc_uint<XLEN> ppc = vatp(pc);
+	// Step 1.
+	sc_uint<XLEN> a = satp::PPN() * PAGESIZE::Sv32;
+	sc_int<XLEN> i = LEVELS::Sv32 - 1;
+
+	// Step 2.
+	sc_uint<XLEN> pteaddr = a + va::VPN(i) * PTESIZE::Sv32;
+	sc_uint<XLEN> pte = 
+	
+}
 
 
 void Rv32i::get_opcode()
