@@ -26,14 +26,22 @@ RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) :
 
 void RiscV::cpu()
 {
+	reset();
 
 	while(true) {
+		// @todo Save pc on mem_pause ??
+		// @todo Inform externally of current page ??
 
 		if(reset_in.read()){
 			reset();
+			continue;
 		}
 
-		sc_uint<XLEN> instr = fetch();
+		mip.MEI() = intr_in.read();
+		if(handle_interrupts())	// If interrupt is handled, continues to next PC
+			continue;
+
+		Instruction instr = fetch();
 
 	}
 
@@ -41,44 +49,161 @@ void RiscV::cpu()
 
 void RiscV::reset()
 {
-	pc = 0;
-	for(int i = 0; i < 32; i++)
-		x[i] = 0;
-}
+	priv.set(Privilege::Level::MACHINE);
+	mstatus.MIE() = 0;
+	mstatus.MPRV() = 0;
+	// misa = full capabilities, not implemented
+	pc.write(vectors::RESET);
+	mcause.write(0);
 
-sc_uint<XLEN> fetch()
-{
-	sc_uint<XLEN> ppc = vatp(pc);
-	// Step 1.
-	sc_uint<XLEN> a = satp::PPN() * PAGESIZE::Sv32;
-	sc_int<XLEN> i = LEVELS::Sv32 - 1;
-
-	// Step 2.
-	sc_uint<XLEN> pteaddr = a + va::VPN(i) * PTESIZE::Sv32;
-	sc_uint<XLEN> pte = 
-	
-}
-
-
-void Rv32i::get_opcode()
-{
-	mem_address.write(state->pc); // Read opcode.
-	opcode = mem_data_r.read();
-	wait(1);
-}
-
-void Rv32i::reset_execution()
-{
-	page 		= 0;
-	state->pc 	= 0;
-	global_inst = 0;
-	intr_en 	= false;
-	prefetch  	= false;
-	jmp_or_br 	= false;
-	mem_byte_we.write(0x0);  		// ?
-	mem_address.write(state->pc);   // 0
-	word_addr = -4;					// 0xFFFFFFFC ??
+	// mem_byte_we.write(0x0);
 	wait(17);
+}
+
+bool RiscV::handle_interrupts()
+{
+	if(mip.read() & mie.read()) {	// Some enabled interrupt is pending
+		if(priv.get() == Privilege::Level::MACHINE){
+			if(mstatus.MIE() && (mip.read() & mie.read() & Interrupts::MODE::MACHINE)){ // Only take M-Mode intrs and if enabled
+				if(mip.MEI() && mie.MEI()){ // Machine External Interrupt
+					mcause.interrupt() = 0;
+					mcause.exception_code() = Interrupts::CODE::MEI;
+				} else if(mip.MSI() && mie.MSI()) { // Machine Software Interrupt
+					mcause.interrupt() = 0;
+					mcause.exception_code() = Interrupts::CODE::MSI;
+				} else if(mip.MTI() && mie.MTI()) { // Machine Timer Interrupt
+					mcause.interrupt() = 0;
+					mcause.exception_code() = Interrupts::CODE::MTI;
+				}
+				mstatus.MPP() = (uint32_t)Privilege::Level::MACHINE;
+				mstatus.MPIE() = mstatus.MIE();
+				mstatus.MIE() = 0;
+				mtval.write(0);
+				mepc.write(pc.read());
+				if(mtvec.MODE() == (uint32_t)Mtvec::Mode::VECTORED){
+					pc.write(mtvec.BASE() + 4 * mcause.exception_code());
+				} else { // Direct
+					pc.write(mtvec.BASE());
+				}
+				return true;
+			} else { // Masked or lower level intr
+				return false;
+			}
+		} else {	// Running in U-Mode or S-Mode. Has possible delegation
+			if((mip.read() & mie.read() & Interrupts::MODE::MACHINE) || // Can't mask machine mode
+				(priv.get() == Privilege::Level::SUPERVISOR && mstatus.SIE() && (mip.read() & mie.read() & Interrupts::MODE::SUPERVISOR)) || // Or unmasked S-Mode
+											priv.get() == Privilege::Level::USER){ // Can't mask any in U-Mode
+				bool delegate = false;
+				if(mip.MEI() && mie.MEI()){ // Machine External Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::MEI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::MEI;
+					}
+				} else if(mip.MSI() && mie.MSI()) { // Machine Software Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::MSI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::MSI;
+					}
+				} else if(mip.MTI() && mie.MTI()) { // Machine Timer Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::MTI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::MTI;
+					}
+				} else if(mip.SEI() && mie.SEI()){ // Supervisor External Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::SEI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::SEI;
+					}
+				} else if(mip.SSI() && mie.SSI()) { // Supervisor Software Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::SSI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::SSI;
+					}
+				} else if(mip.MTI() && mie.MTI()) { // Machine Timer Interrupt
+					if(mideleg.MEI()){
+						delegate = true;
+						scause.interrupt() = 0;
+						scause.exception_code() = Interrupts::CODE::STI;
+					} else {
+						mcause.interrupt() = 0;
+						mcause.exception_code() = Interrupts::CODE::STI;
+					}
+				}
+				if(delegate){
+					mstatus.SPP() = (uint32_t)Privilege::Level::SUPERVISOR;
+					mstatus.SPIE() = mstatus.SIE();
+					mstatus.SIE() = 0;
+					stval.write(0);
+					sepc.write(pc.read());
+					if(stvec.MODE() == (uint32_t)Mtvec::Mode::VECTORED){
+						pc.write(stvec.BASE() + 4 * scause.exception_code());
+					} else { // Direct
+						pc.write(stvec.BASE());
+					}
+				} else {
+					mstatus.MPP() = (uint32_t)Privilege::Level::SUPERVISOR;
+					mstatus.MPIE() = mstatus.MIE();
+					mstatus.MIE() = 0;
+					mtval.write(0);
+					mepc.write(pc.read());
+					if(mtvec.MODE() == (uint32_t)Mtvec::Mode::VECTORED){
+						pc.write(mtvec.BASE() + 4 * mcause.exception_code());
+					} else { // Direct
+						pc.write(mtvec.BASE());
+					}
+				}
+				return true;
+			} else {	// Masked or U-Mode interrupt
+				return false;
+			}
+		}
+	} else {
+		return false;
+	}
+}
+
+Instruction RiscV::fetch()
+{
+	Instruction instr;
+	if(priv.get() == Privilege::Level::MACHINE || satp.MODE() == Satp::MODES::BARE){
+		// @todo Paging applies to S-Mode too?!?!?
+		mem_address.write(pc.read());
+		instr.write(mem_data_r.read());
+		wait(1);
+	} else { // Sv32
+		Sv32::PhysicalAddress a(satp.PPN() * Sv32::PAGESIZE);
+		int i = Sv32::LEVELS - 1;
+		while(i-- >= 0){
+			Sv32::PhysicalAddress pte_addr(a.read() + Sv32::VirtualAddress(pc).VPN(i)*Sv32::PTESIZE);
+			Sv32::PageTableEntry pte;
+			mem_address.write(pte_addr.read());
+			pte.write(mem_data_r.read());
+			wait(1);
+		}
+
+			
+	}
+	return instr;
 }
 
 void Rv32i::interrupt()

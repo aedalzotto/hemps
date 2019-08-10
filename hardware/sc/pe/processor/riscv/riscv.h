@@ -19,21 +19,8 @@ static const int FLIT_SIZE = 32;
 static const int HALF_FLIT = FLIT_SIZE/2;
 typedef sc_uint<HALF_FLIT> half_flit_t;
 
-enum PAGEMODE {
-    BARE,
-    Sv32
-};
-
-enum PAGESIZE {
-    Sv32 = 2^12
-};
-
-enum LEVELS {
-    Sv32 = 2
-};
-
-enum PTESIZE {
-    Sv32 = 4
+namespace vectors {
+    const uint32_t RESET = 0;
 };
 
 SC_MODULE(RiscV) {
@@ -46,7 +33,11 @@ public:
 	 */
 	sc_in_clk	clock;
 	sc_in<bool> reset_in;
-	sc_in<bool> mem_pause;
+    sc_in<bool> intr_in;
+    sc_in<bool> mem_pause;
+
+    sc_out<sc_uint<32> > mem_address;
+    sc_in<sc_uint<32> >  mem_data_r;
 
 	/**
 	 * @brief The loop of the RISC-V CPU.
@@ -65,10 +56,55 @@ public:
 
 private:
 	/* GPRs "X" registers */
-	register_t x[32];
+	Register x[32];
 
 	/* Program counter */
-	register_t pc;
+	Address pc;
+
+    /* This is not a regular register. It just keeps track of the current privilege level */
+    Privilege priv;
+
+    /**
+     * Machine-level CSRs
+     * 
+     * MACHINE INFORMATION REGISTERS
+     * mvendorid:   Vendor ID.
+     * marchid:     Architecture ID.
+     * mimpid:      Implementation ID.
+     * mhartid:     Hardware thread ID.
+     * 
+     * MACHINE TRAP SETUP
+     * mstatus:     Machine status register.
+     * misa:        ISA and extensions.
+     * medeleg:     Machine exception delegation register.
+     * mideleg:     Machine interrupt delegation register.
+     * mie:         Machine interrupt-enable register.
+     * mtvec:       Machine trap-handler base address.
+     * mcounteren:  Machine conter enable.
+     * 
+     * MACHINE TRAP HANDLING
+     * mscratch
+     * mepc
+     * mcause:
+     * mtval
+     * mip
+     */
+    const register_t mvendorid = 0;
+    const register_t marchid = 0;
+    const register_t mimpid = 0;
+    const register_t mhartid = 0;
+    Mstatus mstatus;
+    const register_t misa = 0;
+
+    Interrupts::Mir mideleg;
+    Interrupts::Mir mie;
+    Mtvec mtvec;
+
+
+    Address mepc;
+    Mcause mcause;
+    Register mtval;
+    Interrupts::Mir mip;
 
 	/**
 	 * Supervisor-level CSRs
@@ -91,15 +127,28 @@ private:
 	 * SUPERVISOR PROTECTION AND TRANSLATION
 	 * satp:		Supervisor address translation and protection.
 	 */
-
-
+    //sstatus
+    //sedeleg
+    //sideleg
+    //sie
+    Mtvec stvec;
+    //scounteren
+    //sscratch
+    Address sepc;
+    Mcause scause;
+    Register stval;
+    //sip
+    Satp satp;
 
 	/* PE router address. Used by the simulator */
 	half_flit_t router_addr;
 
 	void reset();
-	sc_uint<XLEN> fetch();
-    sc_uint<XLEN> vatp();
+    bool handle_interrupts();
+	Instruction fetch();
+    Register mem_read(sc_uint<34> Address);
+
+    Register vatp();
 
 };
 
