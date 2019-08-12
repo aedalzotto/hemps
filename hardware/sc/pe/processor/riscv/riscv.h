@@ -97,12 +97,12 @@ private:
     const register_t mhartid = 0;
     Mstatus mstatus;
     const register_t misa = 0;
-
+    Exceptions::Mer medeleg;
     Interrupts::Mir mideleg;
     Interrupts::Mir mie;
     Mtvec mtvec;
-
-
+    //mcounteren
+	//mscratch
     Address mepc;
     Mcause mcause;
     Register mtval;
@@ -149,7 +149,7 @@ private:
     bool handle_interrupts();
 	bool fetch();
     register_t mem_read(sc_uint<34> address);
-    void handle_exceptions();
+    void handle_exceptions(Exceptions::CODE code);
 
     Register vatp();
 

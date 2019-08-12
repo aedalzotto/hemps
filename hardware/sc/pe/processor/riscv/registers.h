@@ -130,6 +130,67 @@ namespace Interrupts {
 	};
 };
 
+namespace Exceptions {
+	enum CODE {
+		INSTRUCTION_ADDRESS_MISALIGNED,
+		INSTRUCTION_ACCESS_FAULT,
+		ILLEGAL_INSTRUCTION,
+		BREAKPOINT,
+		LOAD_ADDRESS_MISALIGNED,
+		LOAD_ACCESS_FAULT,
+		STORE_AMO_ADDRESS_MISALIGNED,
+		STORE_AMO_ACCESS_FAULT,
+		ECALL_FROM_UMODE,
+		ECALL_FROM_SMODE,
+
+		ECALL_FROM_MMODE = 11,
+		INSTRUCTION_PAGE_FAULT,
+		LOAD_PAGE_FAULT,
+
+		STORE_AMO_PAGE_FAULT = 15,
+		MAX
+	};
+	enum BIT {
+		IAM = 1 << CODE::INSTRUCTION_ADDRESS_MISALIGNED,
+		IAF = 1 << CODE::INSTRUCTION_ACCESS_FAULT,
+		II  = 1 << CODE::ILLEGAL_INSTRUCTION,
+		BP  = 1 << CODE::BREAKPOINT,
+		LAM = 1 << CODE::LOAD_ADDRESS_MISALIGNED,
+		LAF = 1 << CODE::LOAD_ACCESS_FAULT,
+		SAM = 1 << CODE::STORE_AMO_ADDRESS_MISALIGNED,
+		SAF = 1 << CODE::STORE_AMO_ACCESS_FAULT,
+		ECU = 1 << CODE::ECALL_FROM_UMODE,
+		ECS = 1 << CODE::ECALL_FROM_SMODE,
+		ECM = 1 << CODE::ECALL_FROM_MMODE,
+		IPF = 1 << CODE::INSTRUCTION_PAGE_FAULT,
+		LPF = 1 << CODE::LOAD_PAGE_FAULT,
+		SPF = 1 << CODE::STORE_AMO_PAGE_FAULT
+	};
+
+	class Mer : public Register {
+	private:
+		static const uint32_t MASK = 0xBFFF;
+	public:
+		void write(register_t value) { reg = (value & MASK);  }
+		register_t read() { return (reg & MASK); }
+
+		sc_dt::sc_uint_bitref SPF() { return reg.bit(14); }
+		sc_dt::sc_uint_bitref LPF() { return reg.bit(13); }
+		sc_dt::sc_uint_bitref IPF() { return reg.bit(12); }
+		//sc_dt::sc_uint_bitref ECM() { return reg.bit(11); }
+		sc_dt::sc_uint_bitref ECS() { return reg.bit(9); }
+		sc_dt::sc_uint_bitref ECU() { return reg.bit(8); }
+		sc_dt::sc_uint_bitref SAF() { return reg.bit(7); }
+		sc_dt::sc_uint_bitref SAM() { return reg.bit(6); }
+		sc_dt::sc_uint_bitref LAF() { return reg.bit(5); }
+		sc_dt::sc_uint_bitref LAM() { return reg.bit(4); }
+		sc_dt::sc_uint_bitref BP() { return reg.bit(3); }
+		sc_dt::sc_uint_bitref II() { return reg.bit(2); }
+		sc_dt::sc_uint_bitref IAF() { return reg.bit(1); }
+		sc_dt::sc_uint_bitref IAM() { return reg.bit(0); }
+	};
+};
+
 /* RISC-V instruction format */
 class Instruction : public Register {
 public:

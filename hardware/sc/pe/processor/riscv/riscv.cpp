@@ -139,7 +139,7 @@ bool RiscV::fetch()
 			pte.write(mem_read(pte_addr.read()));
 			if(!pte.V() || (!pte.R() && pte.W())){
 				// Not valid or Write-Only
-				// @todo Page-fault exception on fetch
+				handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
 				return true;
 			} else if(pte.R() || pte.X()){
 				// Leaf PTE
@@ -149,7 +149,8 @@ bool RiscV::fetch()
 					// Memory execute allowed
 					if(i && pte.PPN(0)){
 						// Misaligned superpage
-						// @todo Raise page-fault on fetch
+						handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
+						return true;
 					} else {
 						// Efectively access PTE
 						pte.A() = 1;
@@ -165,7 +166,7 @@ bool RiscV::fetch()
 					}
 				} else {
 					// Invalid access type
-					// @todo Raise page-fault on fetch
+					handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
 					return true;
 				}
 			} else {
@@ -174,7 +175,7 @@ bool RiscV::fetch()
 				continue;
 			}
 		}
-		// @todo Page-fault exception on fetch
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
 		return true;
 	}
 }
@@ -187,50 +188,30 @@ register_t RiscV::mem_read(sc_uint<34> address)
 	return ret;
 }
 
-void RiscV::handle_exceptions()
+void RiscV::handle_exceptions(Exceptions::CODE code)
 {
-	
-}
-
-void Rv32i::interrupt()
-{
-	state->epc = state->pc - 4; // Exception PC 
-	page = 0;		  			// OS Page
-	state->pc = 0x3C; 			// Interrupt vector. JMP to INTERRUPT_SERVICE_ROUTINE in Boot.S
-								// It saves context and then jumps to OS_InterruptServiceRoutine in kernel_slave.c
-	get_opcode();			
-	intr_enable = false;
-}
-
-void Rv32i::read_opcode()
-{
-	// Instruction read.
-	mem_address.write(state->pc);
-	if(prefetch) {
-		opcode = prefetched_opcode;
-		prefetch = false;
+	if(priv.get() != Privilege::Level::MACHINE && (medeleg.read() & (1 << code))){ // Handle in S-Mode
+		scause.interrupt() = 0;
+		scause.exception_code() = code;
+		stval.write(0);
+		mstatus.SPP() = (uint32_t)priv.get();	// Previous privilege
+		priv.set(Privilege::Level::SUPERVISOR);	// New privilege
+		mstatus.SPIE() = mstatus.SIE();			// Previous interrupt-enable of target mode
+		mstatus.SIE() = 0;						// Disable interrupt-enable of target mode
+		sepc.write(pc.read());					// Previous PC
+		pc.write(stvec.BASE());					// Synchronous exceptions are always DIRECT
+	} else {	// Handle in M-Mode
+		mcause.interrupt() = 0;
+		mcause.exception_code() = code;
+		mtval.write(0);
+		mstatus.MPP() = (uint32_t)priv.get();	// Previous privilege
+		priv.set(Privilege::Level::MACHINE);	// New privilege
+		mstatus.MPIE() = mstatus.MIE();			// Previous interrupt-enable of target mode
+		mstatus.MIE() = 0;						// Disable interrupt-enable of target mode
+		mepc.write(pc.read());					// Previous PC
+		pc.write(mtvec.BASE());					// Synchronous exceptions are always DIRECT
 	}
-	else
-		instr = mem_data_r.read();
-
-	opcode = instr & 0x7f; // instr[6:0]
-	/*
-	rs = (instr >> 21) & 0x1f;
-	rt = (instr >> 16) & 0x1f;
-	rd = (instr >> 11) & 0x1f;
-	re = (instr >>  6) & 0x1f;
-	func = instr & 0x3f;
-	imm = instr & 0xffff;
-	imm_shift = (((int)(short)imm) << 2) - 4;
-	target = (instr << 6) >> 4;
-	ptr = (short)imm + r[rs];
-	ptr |= page;	// Adds the page number.
-	*/
-
-	x[0] = 0; // Reassures x[0] is 0
-	jump_or_branch = false; // Still not decoded
 }
-
 
 void Rv32i::rv32i_execution() {
 	
