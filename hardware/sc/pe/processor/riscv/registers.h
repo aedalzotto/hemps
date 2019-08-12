@@ -177,11 +177,13 @@ namespace Sv32 {
 		PhysicalAddress();
 		PhysicalAddress(sc_uint<34> pa) : reg(pa) {};
 		sc_dt::sc_uint_subref PPN(int level) { return level ? reg.range(33, 22) : reg.range(21, 12); }
+		sc_dt::sc_uint_subref PPN() { return reg.range(33, 12); }
 	};
 
 	class PageTableEntry : public Register {
 	public:
 		sc_dt::sc_uint_subref PPN(int level) { return level ? reg.range(31, 20) : reg.range(19, 10); }
+		sc_dt::sc_uint_subref PPN() { return reg.range(31, 10); }
 
 		//sc_dt::sc_uint_subref RSW() { return reg.range(9, 8); }
 		sc_dt::sc_uint_bitref D() { return reg.bit(7); }

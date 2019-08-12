@@ -64,6 +64,8 @@ private:
     /* This is not a regular register. It just keeps track of the current privilege level */
     Privilege priv;
 
+    Instruction instr;
+
     /**
      * Machine-level CSRs
      * 
@@ -145,8 +147,9 @@ private:
 
 	void reset();
     bool handle_interrupts();
-	Instruction fetch();
-    Register mem_read(sc_uint<34> Address);
+	bool fetch();
+    register_t mem_read(sc_uint<34> address);
+    void handle_exceptions();
 
     Register vatp();
 
