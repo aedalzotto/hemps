@@ -44,6 +44,8 @@ void RiscV::cpu()
 		if(fetch())	// If exception occurred, continues to next PC
 			continue;
 
+		decode_execute();
+
 	}
 
 }
@@ -53,7 +55,7 @@ void RiscV::reset()
 	priv.set(Privilege::Level::MACHINE);
 	mstatus.MIE() = 0;
 	mstatus.MPRV() = 0;
-	// misa = full capabilities, not implemented
+	misa.write((ISA::Ext::M | ISA::Ext::S | ISA::Ext::U));
 	pc.write(vectors::RESET);
 	mcause.write(0);
 
@@ -211,4 +213,9 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 		mepc.write(pc.read());					// Previous PC
 		pc.write(mtvec.BASE());					// Synchronous exceptions are always DIRECT
 	}
+}
+
+void RiscV::decode_execute()
+{
+	
 }

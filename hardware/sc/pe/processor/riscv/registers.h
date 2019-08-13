@@ -44,6 +44,57 @@ public:
 	register_t read() { return reg; }
 };
 
+namespace ISA {
+	enum Ext : uint32_t {
+		A = 1 << 0,
+		B = 1 << 1,
+		C = 1 << 2,
+		D = 1 << 3,
+		E = 1 << 4,
+		F = 1 << 5,
+		G = 1 << 6,
+		H = 1 << 7,
+		I = 1 << 8,
+		J = 1 << 9,
+		K = 1 << 10,
+		L = 1 << 11,
+		M = 1 << 12,
+		N = 1 << 13,
+		P = 1 << 15,
+		Q = 1 << 16,
+		S = 1 << 18,
+		T = 1 << 19,
+		U = 1 << 20,
+		V = 1 << 21,
+		X = 1 << 22
+	};
+
+	class Misa : public Register {
+	public:
+		sc_dt::sc_uint_bitref X() { return reg.bit(22); }
+		sc_dt::sc_uint_bitref V() { return reg.bit(21); }
+		sc_dt::sc_uint_bitref U() { return reg.bit(20); }
+		sc_dt::sc_uint_bitref T() { return reg.bit(19); }
+		sc_dt::sc_uint_bitref S() { return reg.bit(18); }
+		sc_dt::sc_uint_bitref Q() { return reg.bit(16); }
+		sc_dt::sc_uint_bitref P() { return reg.bit(15); }
+		sc_dt::sc_uint_bitref N() { return reg.bit(13); }
+		sc_dt::sc_uint_bitref M() { return reg.bit(12); }
+		sc_dt::sc_uint_bitref L() { return reg.bit(11); }
+		sc_dt::sc_uint_bitref K() { return reg.bit(10); }
+		sc_dt::sc_uint_bitref J() { return reg.bit(9); }
+		sc_dt::sc_uint_bitref I() { return reg.bit(8); }
+		sc_dt::sc_uint_bitref H() { return reg.bit(7); }
+		sc_dt::sc_uint_bitref G() { return reg.bit(6); }
+		sc_dt::sc_uint_bitref F() { return reg.bit(5); }
+		sc_dt::sc_uint_bitref E() { return reg.bit(4); }
+		sc_dt::sc_uint_bitref D() { return reg.bit(3); }
+		sc_dt::sc_uint_bitref C() { return reg.bit(2); }
+		sc_dt::sc_uint_bitref B() { return reg.bit(1); }
+		sc_dt::sc_uint_bitref A() { return reg.bit(0); }
+	};
+};
+
 class Mstatus : public Register {
 private:
 	static const uint32_t MASK = 0x807FF9BB;

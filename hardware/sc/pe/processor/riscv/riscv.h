@@ -97,7 +97,7 @@ private:
 	const register_t mimpid = 0;
 	const register_t mhartid = 0;
 	Mstatus mstatus;
-	const register_t misa = 0;
+	ISA::Misa misa;
 	Exceptions::Mer medeleg;
 	Interrupts::Mir mideleg;
 	Interrupts::Mir mie;
@@ -146,12 +146,44 @@ private:
 	/* PE router address. Used by the simulator */
 	half_flit_t router_addr;
 
+	/**
+	 * @brief Resets the CPU to its initial state.
+	 */
 	void reset();
+
+	/**
+	 * @brief Handle pending interrupts.
+	 * 
+	 * @detail If interrupt is not masked, take it.
+	 * 
+	 * @return True if interrupt has been taken.
+	 */
 	bool handle_interrupts();
+
+	/**
+	 * @brief Fetches an instruction from virtual/physical memory
+	 * 
+	 * @return True if exception occurred
+	 */
 	bool fetch();
+
+	/**
+	 * @brief Reads XLEN from memory.
+	 * 
+	 * @param address The memory address to be readed.
+	 * 
+	 * @return XLEN bits from memory address.
+	 */
 	register_t mem_read(sc_uint<34> address);
+
+	/**
+	 * @brief Handles synchronous exceptions
+	 */
 	void handle_exceptions(Exceptions::CODE code);
 
-	Register vatp();
+	/**
+	 * @brief Decodes and executes the fetched instruction.
+	 */
+	void decode_execute();
 
 };
