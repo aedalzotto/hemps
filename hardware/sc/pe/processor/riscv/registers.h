@@ -97,7 +97,7 @@ namespace ISA {
 
 namespace Instructions {
 	enum OPCODES {
-		OP_IMM,
+		OP_IMM = 0b0010011,
 	};
 };
 
@@ -264,6 +264,7 @@ public:
 
 class Address : public Register {
 public:
+	void next() { reg += 4; }
 	sc_dt::sc_uint_subref page_offset() { return reg.range(11, 0); }
 };
 

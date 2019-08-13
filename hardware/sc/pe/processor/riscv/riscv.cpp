@@ -20,8 +20,8 @@ RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) :
 				sc_module(name_), router_addr(router_addr_)
 {
 	SC_THREAD(cpu);
-	sensitive << clock.pos() << mem_pause.pos();
-	sensitive << mem_pause.neg();
+	sensitive << clock.pos();// << mem_pause.pos();
+	//sensitive << mem_pause.neg();
 }
 
 void RiscV::cpu()
@@ -44,7 +44,8 @@ void RiscV::cpu()
 		if(fetch())	// If exception occurred, continues to next PC
 			continue;
 
-		decode_execute();
+		decode();
+		(this->*execute)();
 
 	}
 
@@ -131,6 +132,7 @@ bool RiscV::fetch()
 {
 	if(priv.get() == Privilege::Level::MACHINE || satp.MODE() == Satp::MODES::BARE){
 		instr.write(mem_read(pc.read()));
+		pc.next();
 		return false;
 	} else { // Sv32
 		Sv32::VirtualAddress va(pc);
@@ -164,6 +166,7 @@ bool RiscV::fetch()
 						}
 						pa.PPN(Sv32::LEVELS - 1) = pte.PPN(Sv32::LEVELS - 1);
 						instr.write(mem_read(pa.PPN()*Sv32::PAGESIZE + pa.page_offset()));
+						pc.next();
 						return false;
 					}
 				} else {
@@ -215,11 +218,56 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 	}
 }
 
-void RiscV::decode_execute()
+void RiscV::decode()
 {
+	// First level of decoding. Decode the opcode
 	switch(instr.opcode()){
 	case Instructions::OPCODES::OP_IMM:
-
-		break;	
+		decode_op_imm();
+		break;
+	case Instructions::OPCODES::LUI:
+		execute = &RiscV::lui;
+		break;
+	case Instructions::OPCODES::AUIPC:
+		auipc();
+		break;
+	case Instructions::OPCODES::OP:
+		op();
+		break;
+	case Instructions::OPCODES::AUIPC:
+		auipc();
+		break;
+	case Instructions::OPCODES::JAL:
+		jal();
+		break;
+	case Instructions::OPCODES::JALR:
+		jalr();
+		break;
+	case Instructions::OPCODES::BRANCH:
+		branch();
+		break;
+	case Instructions::OPCODES::LOAD:
+		load();
+		break;
+	case Instructions::OPCODES::STORE:
+		store();
+		break;
+	case Instructions::OPCODES::MISC_MEM:
+		misc_mem();
+		break;
+	case Instructions::OPCODES::SYSTEM:
+		system();
+		break;
 	}
+}
+
+void RiscV::decode_op_imm()
+{
+	
+}
+
+void RiscV::lui()
+{
+
+
 }

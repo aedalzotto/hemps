@@ -183,6 +183,18 @@ private:
 	/**
 	 * @brief Decodes and executes the fetched instruction.
 	 */
-	void decode_execute();
+	void decode();
 
+	/**
+	 * @brief Decodes the OP-IMM opcode.
+	 */
+	void decode_op_imm();
+
+	void lui();
+
+	/**
+	 * @brief Pointer to execute function that will be set by the decoder.
+	 */
+	void (RiscV::*execute)();
+	
 };
