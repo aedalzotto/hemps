@@ -182,15 +182,24 @@ private:
 
 	/**
 	 * @brief Decodes and executes the fetched instruction.
+	 * 
+	 * @return True if exception occurred
 	 */
-	void decode();
+	bool decode();
 
 	/**
 	 * @brief Decodes the OP-IMM opcode.
+	 * 
+	 * @return True if exception occurred
 	 */
-	void decode_op_imm();
+	bool decode_op_imm();
 
-	void lui();
+	/**
+	 * @brief Decodes the OP opcode.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool decode_op();
 
 	/**
 	 * @brief Pointer to execute function that will be set by the decoder.

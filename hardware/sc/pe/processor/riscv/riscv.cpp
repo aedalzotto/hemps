@@ -38,15 +38,17 @@ void RiscV::cpu()
 		}
 
 		mip.MEI() = intr_in.read();
-		if(handle_interrupts())	// If interrupt is handled, continues to next PC
+		if(handle_interrupts())	// If interrupt is handled, continues interrupt PC
 			continue;
 
-		if(fetch())	// If exception occurred, continues to next PC
+		if(fetch())	// If exception occurred, continues to exception PC
 			continue;
 
-		decode();
+		if(decode()) // If exception occurred, continues to exception PC
+			continue;
+
 		(this->*execute)();
-
+		x[0] = 0;
 	}
 
 }
@@ -218,30 +220,34 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 	}
 }
 
-void RiscV::decode()
+bool RiscV::decode()
 {
 	// First level of decoding. Decode the opcode
 	switch(instr.opcode()){
 	case Instructions::OPCODES::OP_IMM:
-		decode_op_imm();
+		return decode_op_imm();
 		break;
 	case Instructions::OPCODES::LUI:
 		execute = &RiscV::lui;
 		break;
 	case Instructions::OPCODES::AUIPC:
-		auipc();
+		execute = &RiscV::auipc;
 		break;
 	case Instructions::OPCODES::OP:
-		op();
-		break;
-	case Instructions::OPCODES::AUIPC:
-		auipc();
+		return decode_op();
 		break;
 	case Instructions::OPCODES::JAL:
-		jal();
+		execute = &RiscV::jal;
 		break;
 	case Instructions::OPCODES::JALR:
-		jalr();
+		switch(instr.funct3()){
+		case Instructions::FUNCT3::JALR:
+			execute = &RiscV::jal;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
 		break;
 	case Instructions::OPCODES::BRANCH:
 		branch();
@@ -259,15 +265,151 @@ void RiscV::decode()
 		system();
 		break;
 	}
+	return false;
 }
 
-void RiscV::decode_op_imm()
+bool RiscV::decode_op_imm()
 {
-	
+	// Decodes the imm[11:5] and the funct3
+	switch(instr.funct3()){
+	case Instructions::FUNCT3::ADDI:
+		execute = &RiscV::addi;
+		break;
+	case Instructions::FUNCT3::SLTI:
+		execute = &RiscV::slti;
+		break;
+	case Instructions::FUNCT3::SLTIU:
+		execute = &RiscV::sltiu;
+		break;
+	case Instructions::FUNCT3::XORI:
+		execute = &RiscV::xori;
+		break;
+	case Instructions::FUNCT3::ORI:
+		execute = &RiscV::ori;
+		break;
+	case Instructions::FUNCT3::ANDI:
+		execute = &RiscV::andi;
+		break;
+	case Instructions::FUNCT3::SLLI:
+		switch(instr.imm_11_5()){
+		case Instructions::IMM_11_5::SLLI:
+			execute = &RiscV::slli;
+			break;
+		default:		
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::SRLI_SRAI:
+		switch(instr.imm_11_5()){
+		case Instructions::IMM_11_5::SRAI:
+			execute = &RiscV::srai;
+			break;
+		case Instructions::IMM_11_5::SRLI:
+			execute = &RiscV::srli;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	default:
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+	return false;
 }
 
-void RiscV::lui()
+bool RiscV::decode_op()
 {
-
-
+	// Decodes the funct7 and the funct3
+	switch(instr.funct3()){
+	case Instructions::FUNCT3::ADD_SUB:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::ADD:
+			execute = &RiscV::add;
+			break;
+		case Instructions::FUNCT7::SUB:
+			execute = &RiscV::sub;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::SLL:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::SLL:
+			execute = &RiscV::sll;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::SLT:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::SLT:
+			execute = &RiscV::slt;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::SLTU:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::SLTU:
+			execute = &RiscV::sltu;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::XOR:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::XOR:
+			execute = &RiscV::xor;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::SRL_SRA:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::SRL:
+			execute = &RiscV::srl;
+			break;
+		case Instructions::FUNCT7::SRA:
+			execute = &RiscV::sra;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::OR:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::OR:
+			execute = &RiscV::or;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	case Instructions::FUNCT3::AND:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::AND:
+			execute = &RiscV::and;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
+		break;
+	}
+	return false;
 }
