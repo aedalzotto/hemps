@@ -95,6 +95,12 @@ namespace ISA {
 	};
 };
 
+namespace Instructions {
+	enum OPCODES {
+		OP_IMM,
+	};
+};
+
 class Mstatus : public Register {
 private:
 	static const uint32_t MASK = 0x807FF9BB;

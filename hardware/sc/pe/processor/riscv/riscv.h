@@ -34,7 +34,6 @@ public:
 	sc_in_clk	clock;
 	sc_in<bool> reset_in;
 	sc_in<bool> intr_in;
-	sc_in<bool> mem_pause;
 
 	sc_out<sc_uint<32> > mem_address;
 	sc_in<sc_uint<32> >  mem_data_r;

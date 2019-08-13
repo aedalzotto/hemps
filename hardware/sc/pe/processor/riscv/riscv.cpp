@@ -217,5 +217,9 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 
 void RiscV::decode_execute()
 {
-	
+	switch(instr.opcode()){
+	case Instructions::OPCODES::OP_IMM:
+
+		break;	
+	}
 }
