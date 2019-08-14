@@ -202,6 +202,77 @@ private:
 	bool decode_op();
 
 	/**
+	 * @brief Decodes the BRANCH opcode.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool decode_branch();
+
+	/**
+	 * @brief Decodes the LOAD opcode.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool decode_load();
+
+	/**
+	 * @brief Decodes the LOAD opcode.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool decode_store();
+
+	/**
+	 * @brief Decodes the LOAD opcode.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool decode_system();
+
+	// RV32I Instructions
+
+	void lui();
+	void auipc();
+	void jal();
+	void jalr();
+	void beq();
+	void bne();
+	void blt();
+	void bge();
+	void bltu();
+	void bgeu();
+	void lb();
+	void lh();
+	void lw();
+	void lbu();
+	void lhu();
+	void sb();
+	void sh();
+	void sw();
+	void addi();
+	void slti();
+	void sltiu();
+	void xori();
+	void ori();
+	void andi();
+	void slli();
+	void srli();
+	void srai();
+	void add();
+	void sub();
+	void sll();
+	void slt();
+	void sltu();
+	void _xor();
+	void srl();
+	void sra();
+	void _or();
+	void _and();
+	void fence();
+	void ecall();
+	void ebreak();
+
+	/**
 	 * @brief Pointer to execute function that will be set by the decoder.
 	 */
 	void (RiscV::*execute)();

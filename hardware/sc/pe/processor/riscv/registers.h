@@ -97,12 +97,17 @@ namespace ISA {
 
 namespace Instructions {
 	enum OPCODES {
-		OP_IMM = 0b0010011,
-		LUI    = 0b0110111,
-		AUIPC  = 0b0010111,
-		OP     = 0b0110011,
-		JAL    = 0b1101111,
-		JALR   = 0b1100111
+		OP_IMM   = 0b0010011,
+		LUI      = 0b0110111,
+		AUIPC    = 0b0010111,
+		OP       = 0b0110011,
+		JAL      = 0b1101111,
+		JALR     = 0b1100111,
+		BRANCH   = 0b1100011,
+		LOAD     = 0b0000011,
+		STORE    = 0b0100011,
+		MISC_MEM = 0b0001111,
+		SYSTEM   = 0b1110011
 	};
 	enum FUNCT3 {
 		// OP-IMM
@@ -126,28 +131,55 @@ namespace Instructions {
 		AND  = 0b111,
 
 		// JALR
-		JALR = 0b000
-	};
-	enum IMM_11_5 {
-		SLLI = 0b0000000,
+		JALR = 0b000,
 
-		SRLI = 0b0000000,
-		SRAI = 0b0100000
+		// BRANCH
+		BEQ  = 0b000,
+		BNE  = 0b001,
+		BLT  = 0b100,
+		BGE  = 0b101,
+		BLTU = 0b110,
+		BGEU = 0b111,
+
+		// LOAD
+		LB  = 0b000,
+		LH  = 0b001,
+		LW  = 0b010,
+		LBU = 0b100,
+		LHU = 0b101,
+
+		// STORE
+		SB = 0b000,
+		SH = 0b001,
+		SW = 0b010,
+
+		// MISC_MEM
+		FENCE = 0b000,
+
+		// SYSTEM
+		ECALL_EBREAK = 0b000
 	};
 	enum FUNCT7 {
+		// OP-IMM
+		SLLI = 0b0000000,
+		SRLI = 0b0000000,
+		SRAI = 0b0100000,
+
+		// OP
 		ADD  = 0b0000000,
 		SUB  = 0b0100000,
-
 		SLL  = 0b0000000,
 		SLT  = 0b0000000,
 		SLTU = 0b0000000,
 		XOR  = 0b0000000,
-
 		SRL  = 0b0000000,
 		SRA  = 0b0100000,
-
 		OR   = 0b0000000,
 		AND  = 0b0000000,
+	};
+	enum IMM_11_0 {
+		ECALL  = 0b000000000000,
+		EBREAK = 0b000000000001,
 	};
 };
 
