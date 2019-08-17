@@ -515,3 +515,203 @@ bool RiscV::decode_system()
 	}
 	return false;
 }
+
+void RiscV::lui()
+{
+
+}
+
+void RiscV::auipc()
+{
+
+}
+
+void RiscV::jal()
+{
+
+}
+
+void RiscV::jalr()
+{
+
+}
+
+void RiscV::beq()
+{
+
+}
+
+void RiscV::bne()
+{
+
+}
+
+void RiscV::blt()
+{
+
+}
+
+void RiscV::bge()
+{
+
+}
+
+void RiscV::bltu()
+{
+
+}
+
+void RiscV::bgeu()
+{
+
+}
+
+void RiscV::lb()
+{
+
+}
+
+void RiscV::lh()
+{
+
+}
+
+void RiscV::lw()
+{
+
+}
+
+void RiscV::lbu()
+{
+
+}
+
+void RiscV::lhu()
+{
+
+}
+
+void RiscV::sb()
+{
+
+}
+
+void RiscV::sh()
+{
+
+}
+
+void RiscV::sw()
+{
+
+}
+
+void RiscV::addi()
+{
+
+}
+
+void RiscV::slti()
+{
+
+}
+
+void RiscV::sltiu()
+{
+
+}
+
+void RiscV::xori()
+{
+
+}
+
+void RiscV::ori()
+{
+
+}
+
+void RiscV::andi()
+{
+
+}
+
+void RiscV::slli()
+{
+
+}
+
+void RiscV::srli()
+{
+
+}
+
+void RiscV::srai()
+{
+
+}
+
+void RiscV::add()
+{
+
+}
+
+void RiscV::sub()
+{
+
+}
+
+void RiscV::sll()
+{
+
+}
+
+void RiscV::slt()
+{
+
+}
+
+void RiscV::sltu()
+{
+
+}
+
+void RiscV::_xor()
+{
+
+}
+
+void RiscV::srl()
+{
+
+}
+
+void RiscV::sra()
+{
+
+}
+
+void RiscV::_or()
+{
+
+}
+
+void RiscV::_and()
+{
+
+}
+
+void RiscV::fence()
+{
+
+}
+
+void RiscV::ecall()
+{
+
+}
+
+void RiscV::ebreak()
+{
+
+}

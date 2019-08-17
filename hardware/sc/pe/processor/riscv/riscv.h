@@ -230,8 +230,18 @@ private:
 	bool decode_system();
 
 	// RV32I Instructions
-
+	/**
+	 * @brief Load Upper Immediate.
+	 * 
+	 * @detail rd ← imm
+	 */
 	void lui();
+
+	/**
+	 * @brief Add Upper Immediate to PC.
+	 * 
+	 * @detail rd ← imm
+	 */
 	void auipc();
 	void jal();
 	void jalr();
