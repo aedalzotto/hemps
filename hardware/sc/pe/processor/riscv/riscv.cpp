@@ -67,7 +67,7 @@ void RiscV::reset()
 	mcause.write(0);
 
 	// mem_byte_we.write(0x0);
-	wait(17);
+	wait(Timings::RESET);
 }
 
 bool RiscV::handle_interrupts()
@@ -193,7 +193,7 @@ register_t RiscV::mem_read(sc_uint<34> address)
 {
 	mem_address.write(address);
 	register_t ret = mem_data_r.read();
-	wait(1);
+	wait(Timings::MEM_READ);
 	return ret;
 }
 
@@ -224,6 +224,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 
 bool RiscV::decode()
 {
+	wait(Timings::DECODE);
 	// First level of decoding. Decode the opcode
 	switch(instr.opcode()){
 	case Instructions::OPCODES::OP_IMM:
@@ -520,6 +521,7 @@ bool RiscV::decode_system()
 
 bool RiscV::lui()
 {
+	wait(Timings::LOGICAL);
 	x[instr.rd()].range(31,12) = instr.imm_31_12();
 	x[instr.rd()].range(11,0) = 0;
 	return false;
@@ -527,6 +529,7 @@ bool RiscV::lui()
 
 bool RiscV::auipc()
 {
+	wait(Timings::LOGICAL);
 	Register r;
 	r.range(31,12) = instr.imm_31_12();
 	r.range(11,0) = 0;
@@ -537,6 +540,7 @@ bool RiscV::auipc()
 
 bool RiscV::jal()
 {
+	wait(Timings::LOGICAL);
 	// Save PC ("Link")
 	x[instr.rd()].write(pc.read()+4);
 
@@ -559,6 +563,7 @@ bool RiscV::jal()
 
 bool RiscV::jalr()
 {
+	wait(Timings::LOGICAL);
 	// Save PC ("Link")
 	x[instr.rd()].write(pc.read()+4);
 
@@ -580,6 +585,7 @@ bool RiscV::jalr()
 
 bool RiscV::beq()
 {
+	wait(Timings::LOGICAL);
 	if(x[instr.rs1()].read() == x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -599,6 +605,7 @@ bool RiscV::beq()
 
 bool RiscV::bne()
 {
+	wait(Timings::LOGICAL);
 	if(x[instr.rs1()].read() != x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -618,6 +625,7 @@ bool RiscV::bne()
 
 bool RiscV::blt()
 {
+	wait(Timings::LOGICAL);
 	if((int)x[instr.rs1()].read() < (int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -637,6 +645,7 @@ bool RiscV::blt()
 
 bool RiscV::bge()
 {
+	wait(Timings::LOGICAL);
 	if((int)x[instr.rs1()].read() >= (int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -656,6 +665,7 @@ bool RiscV::bge()
 
 bool RiscV::bltu()
 {
+	wait(Timings::LOGICAL);
 	if((unsigned int)x[instr.rs1()].read() < (unsigned int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -675,6 +685,7 @@ bool RiscV::bltu()
 
 bool RiscV::bgeu()
 {
+	wait(Timings::LOGICAL);
 	if((unsigned int)x[instr.rs1()].read() >= (unsigned int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
@@ -694,7 +705,18 @@ bool RiscV::bgeu()
 
 bool RiscV::lb()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
 
+	uint32_t offset = r.read() & 0x000000FF;
+	uint32_t address = r.read() & 0xFFFFFF00;
+
+	// @todo: There is a logic with mem read and timings.	
 }
 
 bool RiscV::lh()

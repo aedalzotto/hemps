@@ -419,3 +419,10 @@ public:
 	sc_dt::sc_uint_subref ASID() { return reg.range(30, 22); }
 	sc_dt::sc_uint_subref PPN() { return reg.range(21, 0); }
 };
+
+namespace Timings {
+	static const uint32_t RESET = 17;
+	static const uint32_t MEM_READ = 1;
+	static const uint32_t DECODE = 1;
+	static const uint32_t LOGICAL = 1;
+};
