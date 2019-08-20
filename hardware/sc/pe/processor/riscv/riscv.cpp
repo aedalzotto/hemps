@@ -705,18 +705,7 @@ bool RiscV::bgeu()
 
 bool RiscV::lb()
 {
-	wait(Timings::LOGICAL);
-	// Sign-extend offset
-	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
 	
-	r.range(11, 0) = instr.imm_11_0();
-	r.write(r.read() + x[instr.rs1()].read());
-
-	uint32_t offset = r.read() & 0x000000FF;
-	uint32_t address = r.read() & 0xFFFFFF00;
-
-	// @todo: There is a logic with mem read and timings.	
 }
 
 bool RiscV::lh()
@@ -726,7 +715,49 @@ bool RiscV::lh()
 
 bool RiscV::lw()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
 
+	//const uint32_t offset = r.read() & 0x00000003;
+	const uint32_t address = r.read() & 0xFFFFFFFC;
+	mem_address.write(r.read() & address);	// Address the memory with word address (4-byte aligned).
+	wait(1);
+
+	// @todo: There is a logic with mem read and timings.
+	// I don't know what the code below does!!
+	// It only makes sense if the mem_address will be updated in the memory only after
+	// an wait(2) or wait(1) here!
+
+	// Verifies the mem_pause signal at the first execution cycle
+	if(mem_pause.read()) {
+		mem_address.write(pc_last);	// Keep the last memory address before mem_pause = '1'
+		wait(1);
+		while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
+			wait(1);
+		
+			mem_address.write(r.read() & address);// Address the memory with word address.
+			wait(1);
+		}
+
+		mem_address.write(pc.read());
+		wait(1);
+
+		// Verifies the mem_pause signal at the second execution cycle
+		if (mem_pause.read()) {
+			mem_address.write(r.read() & address);// Keep the last memory address before mem_pause = '1'
+
+			while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
+				wait(1);
+
+			mem_address.write(pc.read());// Address the next instruction
+			wait(1);
+		}
+
+		x[instr.rs2()].write(mem_data_r.read());
 }
 
 bool RiscV::lbu()
