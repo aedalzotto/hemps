@@ -32,6 +32,8 @@ void RiscV::cpu()
 		// @todo Save pc on mem_pause ??
 		// @todo Inform externally of current page ??
 
+		x[0].write(0);
+
 		if(reset_in.read()){
 			reset();
 			continue;
@@ -47,8 +49,10 @@ void RiscV::cpu()
 		if(decode()) // If exception occurred, continues to exception PC
 			continue;
 
-		(this->*execute)();
-		x[0].write(0);
+		if((this->*execute)())
+			continue;
+
+		pc.next();
 	}
 
 }
@@ -134,7 +138,6 @@ bool RiscV::fetch()
 {
 	if(priv.get() == Privilege::Level::MACHINE || satp.MODE() == Satp::MODES::BARE){
 		instr.write(mem_read(pc.read()));
-		pc.next();
 		return false;
 	} else { // Sv32
 		Sv32::VirtualAddress va(pc);
@@ -168,7 +171,6 @@ bool RiscV::fetch()
 						}
 						pa.PPN(Sv32::LEVELS - 1) = pte.PPN(Sv32::LEVELS - 1);
 						instr.write(mem_read(pa.PPN()*Sv32::PAGESIZE + pa.page_offset()));
-						pc.next();
 						return false;
 					}
 				} else {
@@ -516,202 +518,326 @@ bool RiscV::decode_system()
 	return false;
 }
 
-void RiscV::lui()
+bool RiscV::lui()
+{
+	x[instr.rd()].range(31,12) = instr.imm_31_12();
+	x[instr.rd()].range(11,0) = 0;
+	return false;
+}
+
+bool RiscV::auipc()
+{
+	Register r;
+	r.range(31,12) = instr.imm_31_12();
+	r.range(11,0) = 0;
+	r.write(r.read() + pc.read());
+	x[instr.rd()] = r;
+	return false;
+}
+
+bool RiscV::jal()
+{
+	// Save PC ("Link")
+	x[instr.rd()].write(pc.read()+4);
+
+	// Sign-extend offset
+	Register r;
+	r.range(31,20) = (int)instr.imm_20() * -1;
+	
+	r.range(19, 12) = instr.imm_19_12();
+	r.bit(11) = instr.imm_11_J();
+	r.range(10, 1) = instr.imm_10_1();
+	r.bit(0) = 0;
+
+	pc.write(pc.read() + r.read());
+
+	if(pc.read() % 4)
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+
+	return true;
+}
+
+bool RiscV::jalr()
+{
+	// Save PC ("Link")
+	x[instr.rd()].write(pc.read()+4);
+
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + pc.read());
+	r.bit(0) = 0;
+
+	pc.write(pc.read() + r.read());
+
+	if(pc.read() % 4)
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+
+	return true;
+}
+
+bool RiscV::beq()
+{
+	if(x[instr.rs1()].read() == x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::bne()
+{
+	if(x[instr.rs1()].read() != x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::blt()
+{
+	if((int)x[instr.rs1()].read() < (int)x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::bge()
+{
+	if((int)x[instr.rs1()].read() >= (int)x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::bltu()
+{
+	if((unsigned int)x[instr.rs1()].read() < (unsigned int)x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::bgeu()
+{
+	if((unsigned int)x[instr.rs1()].read() >= (unsigned int)x[instr.rs2()].read()){ // Taken
+		// Sign-extend offset
+		Register r;
+		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.bit(11) = instr.imm_11_B();
+		r.range(10, 5) = instr.imm_10_5();
+		r.range(4, 1) = instr.imm_4_1();
+		r.bit(0) = 0;
+		pc.write(pc.read() + r.read());
+		if(pc.read() % 4)
+			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	} else { // Not taken
+		return false;
+	}
+}
+
+bool RiscV::lb()
 {
 
 }
 
-void RiscV::auipc()
+bool RiscV::lh()
 {
 
 }
 
-void RiscV::jal()
+bool RiscV::lw()
 {
 
 }
 
-void RiscV::jalr()
+bool RiscV::lbu()
 {
 
 }
 
-void RiscV::beq()
+bool RiscV::lhu()
 {
 
 }
 
-void RiscV::bne()
+bool RiscV::sb()
 {
 
 }
 
-void RiscV::blt()
+bool RiscV::sh()
 {
 
 }
 
-void RiscV::bge()
+bool RiscV::sw()
 {
 
 }
 
-void RiscV::bltu()
+bool RiscV::addi()
 {
 
 }
 
-void RiscV::bgeu()
+bool RiscV::slti()
 {
 
 }
 
-void RiscV::lb()
+bool RiscV::sltiu()
 {
 
 }
 
-void RiscV::lh()
+bool RiscV::xori()
 {
 
 }
 
-void RiscV::lw()
+bool RiscV::ori()
 {
 
 }
 
-void RiscV::lbu()
+bool RiscV::andi()
 {
 
 }
 
-void RiscV::lhu()
+bool RiscV::slli()
 {
 
 }
 
-void RiscV::sb()
+bool RiscV::srli()
 {
 
 }
 
-void RiscV::sh()
+bool RiscV::srai()
 {
 
 }
 
-void RiscV::sw()
+bool RiscV::add()
 {
 
 }
 
-void RiscV::addi()
+bool RiscV::sub()
 {
 
 }
 
-void RiscV::slti()
+bool RiscV::sll()
 {
 
 }
 
-void RiscV::sltiu()
+bool RiscV::slt()
 {
 
 }
 
-void RiscV::xori()
+bool RiscV::sltu()
 {
 
 }
 
-void RiscV::ori()
+bool RiscV::_xor()
 {
 
 }
 
-void RiscV::andi()
+bool RiscV::srl()
 {
 
 }
 
-void RiscV::slli()
+bool RiscV::sra()
 {
 
 }
 
-void RiscV::srli()
+bool RiscV::_or()
 {
 
 }
 
-void RiscV::srai()
+bool RiscV::_and()
 {
 
 }
 
-void RiscV::add()
+bool RiscV::fence()
 {
 
 }
 
-void RiscV::sub()
+bool RiscV::ecall()
 {
 
 }
 
-void RiscV::sll()
-{
-
-}
-
-void RiscV::slt()
-{
-
-}
-
-void RiscV::sltu()
-{
-
-}
-
-void RiscV::_xor()
-{
-
-}
-
-void RiscV::srl()
-{
-
-}
-
-void RiscV::sra()
-{
-
-}
-
-void RiscV::_or()
-{
-
-}
-
-void RiscV::_and()
-{
-
-}
-
-void RiscV::fence()
-{
-
-}
-
-void RiscV::ecall()
-{
-
-}
-
-void RiscV::ebreak()
+bool RiscV::ebreak()
 {
 
 }

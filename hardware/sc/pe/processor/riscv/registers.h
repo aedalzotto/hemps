@@ -42,6 +42,8 @@ public:
 	Register(const Register &Reg) : reg(Reg.reg) { }
 	void write(register_t value) { reg = value; }
 	register_t read() { return reg; }
+	sc_dt::sc_uint_subref range(int l, int r) { return reg.range(l, r); }
+	sc_dt::sc_uint_bitref bit(int b) { return reg.bit(b); }
 };
 
 namespace ISA {
@@ -342,6 +344,15 @@ public:
 	sc_dt::sc_uint_subref imm_11_0() { return reg.range(31, 20); }
 	sc_dt::sc_uint_subref imm_4_0() { return reg.range(11, 7); }
 	sc_dt::sc_uint_subref imm_11_5() { return reg.range(31, 25); }
+	sc_dt::sc_uint_bitref imm_11_B() { return reg.bit(7); }
+	sc_dt::sc_uint_subref imm_4_1() { return reg.range(11, 8); }
+	sc_dt::sc_uint_subref imm_10_5() { return reg.range(30, 25); }
+	sc_dt::sc_uint_bitref imm_12() { return reg.bit(31); }
+	sc_dt::sc_uint_subref imm_31_12() { return reg.range(31, 12); }
+	sc_dt::sc_uint_subref imm_19_12() { return reg.range(19, 12); }
+	sc_dt::sc_uint_bitref imm_11_J() { return reg.bit(20); }
+	sc_dt::sc_uint_subref imm_10_1() { return reg.range(30, 21); }
+	sc_dt::sc_uint_bitref imm_20() { return reg.bit(31); }
 };
 
 class Address : public Register {

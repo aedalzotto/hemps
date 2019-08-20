@@ -167,6 +167,24 @@ private:
 	bool fetch();
 
 	/**
+	 * @brief Load a register from virtual/physical memory
+	 * 
+	 * @param address The memory address to load from.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool load(sc_uint<34> address);
+
+	/**
+	 * @brief Store a register to virtual/physical memory
+	 * 
+	 * @param address The memory address to store to.
+	 * 
+	 * @return True if exception occurred
+	 */
+	bool store(sc_uint<34> address);
+
+	/**
 	 * @brief Reads XLEN from memory.
 	 * 
 	 * @param address The memory address to be readed.
@@ -234,57 +252,143 @@ private:
 	 * @brief Load Upper Immediate.
 	 * 
 	 * @detail rd ← imm
+	 * 
+	 * @return False
 	 */
-	void lui();
+	bool lui();
 
 	/**
 	 * @brief Add Upper Immediate to PC.
 	 * 
-	 * @detail rd ← imm
+	 * @detail 	rd ← pc + offset
+	 * 
+	 * @return False
 	 */
-	void auipc();
-	void jal();
-	void jalr();
-	void beq();
-	void bne();
-	void blt();
-	void bge();
-	void bltu();
-	void bgeu();
-	void lb();
-	void lh();
-	void lw();
-	void lbu();
-	void lhu();
-	void sb();
-	void sh();
-	void sw();
-	void addi();
-	void slti();
-	void sltiu();
-	void xori();
-	void ori();
-	void andi();
-	void slli();
-	void srli();
-	void srai();
-	void add();
-	void sub();
-	void sll();
-	void slt();
-	void sltu();
-	void _xor();
-	void srl();
-	void sra();
-	void _or();
-	void _and();
-	void fence();
-	void ecall();
-	void ebreak();
+	bool auipc();
+
+	/**
+	 * @brief Jump and Link
+	 * 
+	 * @detail rd ← pc + length(inst)
+	 * 		   pc ← pc + offset
+	 * 
+	 * @return True. Can generate Instruction Address Misaligned.
+	 */
+	bool jal();
+
+	/**
+	 * @brief Jump and Link Register
+	 * 
+	 * @detail rd ← pc + length(inst)
+	 * 		   pc ← (rs1 + offset) ∧ -2
+	 * 
+	 * @return True. Can generate Instruction Address Misaligned.
+	 */
+	bool jalr();
+
+	/**
+	 * @brief Branch Equal
+	 * 
+	 * @detail if rs1 = rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool beq();
+
+	/**
+	 * @brief Branch Not Equal
+	 * 
+	 * @detail if rs1 ≠ rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool bne();
+
+	/**
+	 * @brief Branch Less Than
+	 * 
+	 * @detail if rs1 < rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool blt();
+
+	/**
+	 * @brief Branch Greater than Equal
+	 * 
+	 * @detail if rs1 ≥ rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool bge();
+
+	/**
+	 * @brief Branch Less Than Unsigned
+	 * 
+	 * @detail if rs1 < rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool bltu();
+
+	/**
+	 * @brief Branch Greater than Equal Unsigned
+	 * 
+	 * @detail if rs1 ≥ rs2 then pc ← pc + offset
+	 * 
+	 * @return False if branch not taken.
+	 * 		   True if branch taken. Can generate Instruction Address Misaligned.
+	 */
+	bool bgeu();
+
+	/**
+	 * @brief Load Byte
+	 * 
+	 * @detail rd ← s8[rs1 + offset]
+	 * 
+	 * @return False.
+	 */
+	bool lb();
+	bool lh();
+	bool lw();
+	bool lbu();
+	bool lhu();
+	bool sb();
+	bool sh();
+	bool sw();
+	bool addi();
+	bool slti();
+	bool sltiu();
+	bool xori();
+	bool ori();
+	bool andi();
+	bool slli();
+	bool srli();
+	bool srai();
+	bool add();
+	bool sub();
+	bool sll();
+	bool slt();
+	bool sltu();
+	bool _xor();
+	bool srl();
+	bool sra();
+	bool _or();
+	bool _and();
+	bool fence();
+	bool ecall();
+	bool ebreak();
 
 	/**
 	 * @brief Pointer to execute function that will be set by the decoder.
+	 * 
+	 * @return True if jump happened by branch, jump or exception.
 	 */
-	void (RiscV::*execute)();
+	bool (RiscV::*execute)();
 	
 };
