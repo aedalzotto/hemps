@@ -787,110 +787,242 @@ bool RiscV::sw()
 
 bool RiscV::addi()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(x[instr.rs1()].read() + r.read());
+
+	return false;
 }
 
 bool RiscV::slti()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(((int)x[instr.rs1()].read() < (int)r.read()));
+
+	return false;
 }
 
 bool RiscV::sltiu()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(((unsigned int)x[instr.rs1()].read() < (unsigned int)r.read()));
+
+	return false;
 }
 
 bool RiscV::xori()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(x[instr.rs1()].read() ^ r.read());
+
+	return false;
 }
 
 bool RiscV::ori()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(x[instr.rs1()].read() | r.read());
+
+	return false;
 }
 
 bool RiscV::andi()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend immediate
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
 
+	x[instr.rd()].write(x[instr.rs1()].read() & r.read());
+
+	return false;
 }
 
 bool RiscV::slli()
 {
+	wait(Timings::LOGICAL);
+	x[instr.rd()].write(x[instr.rs1()].read() << instr.imm_4_0());
 
+	return false;
 }
 
 bool RiscV::srli()
 {
+	wait(Timings::LOGICAL);
+	x[instr.rd()].write(x[instr.rs1()].read() >> instr.imm_4_0());
 
+	return false;
 }
 
 bool RiscV::srai()
 {
+	wait(Timings::LOGICAL);
 
+	Register r;
+	r.write(x[instr.rs1()].read());
+
+	// Sign-extend
+	uint32_t sign = 0xFFFFFFFF * r.bit(31);
+	r.write(r.read() >> instr.imm_4_0());
+	r.range(31, 31 - instr.imm_4_0()) = sign;
+
+	x[instr.rd()].write(r.read());
+
+	return false;
 }
 
 bool RiscV::add()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() + x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::sub()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() - x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::sll()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() << x[instr.rs2()].range(4, 0));
+
+	return false;
 }
 
 bool RiscV::slt()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(((int)x[instr.rs1()].read() < (int)x[instr.rs2()].read()));
+
+	return false;
 }
 
 bool RiscV::sltu()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(((unsigned int)x[instr.rs1()].read() < (unsigned int)x[instr.rs2()].read()));
+
+	return false;
 }
 
 bool RiscV::_xor()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() ^ x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::srl()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() >> x[instr.rs2()].range(4,0));
+
+	return false;
 }
 
 bool RiscV::sra()
 {
+	wait(Timings::LOGICAL);
 
+	Register r;
+	r.write(x[instr.rs1()].read());
+
+	// Sign-extend
+	uint32_t sign = 0xFFFFFFFF * r.bit(31);
+	r.write(r.read() >> x[instr.rs2()].range(4, 0));
+	r.range(31, 31 - x[instr.rs2()].range(4, 0)) = sign;
+
+	x[instr.rd()].write(r.read());
+
+	return false;
 }
 
 bool RiscV::_or()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() | x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::_and()
 {
+	wait(Timings::LOGICAL);
 
+	x[instr.rd()].write(x[instr.rs1()].read() & x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::fence()
 {
+	wait(Timings::LOGICAL);
 
+	return false;
 }
 
 bool RiscV::ecall()
 {
+	wait(Timings::LOGICAL);
 
+	switch(priv.get()){
+	case Privilege::Level::MACHINE:
+		handle_exceptions(Exceptions::CODE::ECALL_FROM_MMODE);
+		break;
+	case Privilege::Level::SUPERVISOR:
+		handle_exceptions(Exceptions::CODE::ECALL_FROM_SMODE);
+		break;
+	case Privilege::Level::USER:
+		handle_exceptions(Exceptions::CODE::ECALL_FROM_UMODE);
+		break;
+	}	
+
+	return true;
 }
 
 bool RiscV::ebreak()
 {
+	wait(Timings::LOGICAL);
 
+	return false;
 }

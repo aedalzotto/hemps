@@ -361,27 +361,201 @@ private:
 	bool sb();
 	bool sh();
 	bool sw();
+
+	/**
+	 * @brief Add Immediate
+	 * 
+	 * @detail rd ← rs1 + sx(imm)
+	 * 
+	 * @return False.
+	 */
 	bool addi();
+
+	/**
+	 * @brief Set Less Than Immediate
+	 * 
+	 * @detail rd ← sx(rs1) < sx(imm)
+	 * 
+	 * @return False.
+	 */
 	bool slti();
+
+	/**
+	 * @brief Set Less Than Immediate Unsigned
+	 * 
+	 * @detail rd ← ux(rs1) < ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool sltiu();
+
+	/**
+	 * @brief Xor Immediate
+	 * 
+	 * @detail rd ← ux(rs1) ⊕ ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool xori();
+
+	/**
+	 * @brief Or Immediate
+	 * 
+	 * @detail rd ← ux(rs1) ∨ ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool ori();
+
+	/**
+	 * @brief And Immediate
+	 * 
+	 * @detail rd ← ux(rs1) ∧ ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool andi();
+
+	/**
+	 * @brief Shift Left Logical Immediate
+	 * 
+	 * @detail rd ← ux(rs1) ∧ ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool slli();
+
+	/**
+	 * @brief Shift Right Logical Immediate
+	 * 
+	 * @detail rd ← ux(rs1) » ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool srli();
+
+	/**
+	 * @brief Shift Right Arithmetic Immediate
+	 * 
+	 * @detail rd ← sx(rs1) » ux(imm)
+	 * 
+	 * @return False.
+	 */
 	bool srai();
+
+	/**
+	 * @brief Add
+	 * 
+	 * @detail rd ← sx(rs1) + sx(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool add();
+
+	/**
+	 * @brief Subtract
+	 * 
+	 * @detail rd ← sx(rs1) - sx(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool sub();
+
+	/**
+	 * @brief Shift Left Logical
+	 * 
+	 * @detail rd ← ux(rs1) « rs2
+	 * 
+	 * @return False.
+	 */
 	bool sll();
+
+	/**
+	 * @brief Set Less Than
+	 * 
+	 * @detail rd ← sx(rs1) < sx(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool slt();
+
+	/**
+	 * @brief Set Less Than Unsigned
+	 * 
+	 * @detail rd ← ux(rs1) < ux(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool sltu();
+
+	/**
+	 * @brief Xor
+	 * 
+	 * @detail rd ← ux(rs1) ⊕ ux(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool _xor();
+
+	/**
+	 * @brief Shift Right Logical
+	 * 
+	 * @detail rd ← ux(rs1) » rs2
+	 * 
+	 * @return False.
+	 */
 	bool srl();
+
+	/**
+	 * @brief Shift Right Arithmetic
+	 * 
+	 * @detail rd ← sx(rs1) » rs2
+	 * 
+	 * @return False.
+	 */
 	bool sra();
+
+	/**
+	 * @brief Or
+	 * 
+	 * @detail rd ← ux(rs1) ∨ ux(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool _or();
+
+	/**
+	 * @brief And
+	 * 
+	 * @detail rd ← ux(rs1) ∧ ux(rs2)
+	 * 
+	 * @return False.
+	 */
 	bool _and();
+
+	/**
+	 * @brief Fence
+	 * 
+	 * @detail Implemented as NOP.
+	 * 
+	 * @return False.
+	 */
 	bool fence();
+
+	/**
+	 * @brief Service Request to the Execution Environment
+	 * 
+	 * @return True.
+	 */
 	bool ecall();
+
+	/**
+	 * @brief Return Control to a Debugging Environment
+	 * 
+	 * @detail Implemented as NOP
+	 * 
+	 * @return False.
+	 */
 	bool ebreak();
 
 	/**
