@@ -192,8 +192,8 @@ bool RiscV::fetch()
 register_t RiscV::mem_read(sc_uint<34> address)
 {
 	mem_address.write(address);
-	register_t ret = mem_data_r.read();
 	wait(Timings::MEM_READ);
+	register_t ret = mem_data_r.read();
 	return ret;
 }
 
@@ -552,11 +552,14 @@ bool RiscV::jal()
 	r.bit(11) = instr.imm_11_J();
 	r.range(10, 1) = instr.imm_10_1();
 	r.bit(0) = 0;
+	
+	r.write(r.read() + pc.read());
 
-	pc.write(pc.read() + r.read());
-
-	if(pc.read() % 4)
+	if(r.read() % 4)
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+	else
+		pc.write(r.read());
+	
 
 	return true;
 }
@@ -575,10 +578,12 @@ bool RiscV::jalr()
 	r.write(r.read() + pc.read());
 	r.bit(0) = 0;
 
-	pc.write(pc.read() + r.read());
+	r.write(r.read() + pc.read());
 
-	if(pc.read() % 4)
+	if(r.read() % 4)
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+	else
+		pc.write(r.read());
 
 	return true;
 }
@@ -594,9 +599,12 @@ bool RiscV::beq()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -614,9 +622,12 @@ bool RiscV::bne()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -634,9 +645,12 @@ bool RiscV::blt()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -654,9 +668,12 @@ bool RiscV::bge()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -674,9 +691,12 @@ bool RiscV::bltu()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -694,9 +714,12 @@ bool RiscV::bgeu()
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
 		r.bit(0) = 0;
-		pc.write(pc.read() + r.read());
-		if(pc.read() % 4)
+		r.write(r.read() + pc.read());
+
+		if(r.read() % 4)
 			handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		else
+			pc.write(r.read());
 		return true;
 	} else { // Not taken
 		return false;
@@ -722,42 +745,45 @@ bool RiscV::lw()
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
-	//const uint32_t offset = r.read() & 0x00000003;
+	// Load Word must be 32-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+	if(offset){
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	}
+
 	const uint32_t address = r.read() & 0xFFFFFFFC;
-	mem_address.write(r.read() & address);	// Address the memory with word address (4-byte aligned).
+	mem_address.write(address);	// Address the memory with word address (4-byte aligned).
 	wait(1);
 
-	// @todo: There is a logic with mem read and timings.
-	// I don't know what the code below does!!
-	// It only makes sense if the mem_address will be updated in the memory only after
-	// an wait(2) or wait(1) here!
-
 	// Verifies the mem_pause signal at the first execution cycle
-	if(mem_pause.read()) {
-		mem_address.write(pc_last);	// Keep the last memory address before mem_pause = '1'
+	if(mem_pause.read()){
+		mem_address.write(pc.read());	// Keep the last memory address before mem_pause = '1'
 		wait(1);
 		while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
 			wait(1);
-		
-			mem_address.write(r.read() & address);// Address the memory with word address.
-			wait(1);
-		}
 
-		mem_address.write(pc.read());
+		mem_address.write(address);// Address the memory with word address.
 		wait(1);
+	}
 
-		// Verifies the mem_pause signal at the second execution cycle
-		if (mem_pause.read()) {
-			mem_address.write(r.read() & address);// Keep the last memory address before mem_pause = '1'
+	prefetch = true;
+	prefetched_opcode = mem_data_r.read();
+	mem_address.write(state->pc);
+	wait(1);
 
-			while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
-				wait(1);
+	// Verifies the mem_pause signal at the second execution cycle
+	if (mem_pause.read()) {
+		mem_address.write(ptr & word_addr);// Keep the last memory address before mem_pause = '1'
 
-			mem_address.write(pc.read());// Address the next instruction
+		while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
 			wait(1);
-		}
 
-		x[instr.rs2()].write(mem_data_r.read());
+		mem_address.write(state->pc);// Address the next instruction
+		wait(1);
+	}
+
+	x[instr.rs2()].write(mem_data_r.read());
 }
 
 bool RiscV::lbu()
