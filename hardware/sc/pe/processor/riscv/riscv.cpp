@@ -332,67 +332,14 @@ bool RiscV::decode_op_imm()
 
 bool RiscV::decode_op()
 {
-	// Decodes the funct7 and the funct3
-	switch(instr.funct3()){
-	case Instructions::FUNCT3::ADD_SUB:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::ADD:
-			execute = &RiscV::add;
-			break;
-		case Instructions::FUNCT7::SUB:
+	// Decodes funct7 first and then funct3
+	switch(instr.funct7()){
+	case Instructions::FUNCT7::SUB_SRA:
+		switch(instr.funct3()){
+		case Instructions::FUNCT3::SUB:
 			execute = &RiscV::sub;
 			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::SLL:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::SLL:
-			execute = &RiscV::sll;
-			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::SLT:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::SLT:
-			execute = &RiscV::slt;
-			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::SLTU:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::SLTU:
-			execute = &RiscV::sltu;
-			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::XOR:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::XOR:
-			execute = &RiscV::_xor;
-			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::SRL_SRA:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::SRL:
-			execute = &RiscV::srl;
-			break;
-		case Instructions::FUNCT7::SRA:
+		case Instructions::FUNCT3::SRA:
 			execute = &RiscV::sra;
 			break;
 		default:
@@ -400,19 +347,36 @@ bool RiscV::decode_op()
 			return true;
 		}
 		break;
-	case Instructions::FUNCT3::OR:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::OR:
+	case Instructions::FUNCT7::MULDIV:
+		// @todo Implement RV32M instructions
+		break;
+	//case Instructions::FUNCT7::ADD_SLT_SLTU:
+	//case Instructions::FUNCT7::AND_OR_XOR:
+	//case Instructions::FUNCT7::SLL_SRL:
+	case 0:
+		switch(instr.funct3()){
+		case Instructions::FUNCT3::ADD:
+			execute = &RiscV::add;
+			break;
+		case Instructions::FUNCT3::SLL:
+			execute = &RiscV::sll;
+			break;
+		case Instructions::FUNCT3::SLT:
+			execute = &RiscV::slt;
+			break;
+		case Instructions::FUNCT3::SLTU:
+			execute = &RiscV::sltu;
+			break;
+		case Instructions::FUNCT3::XOR:
+			execute = &RiscV::_xor;
+			break;
+		case Instructions::FUNCT3::SRL:
+			execute = &RiscV::srl;
+			break;
+		case Instructions::FUNCT3::OR:
 			execute = &RiscV::_or;
 			break;
-		default:
-			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
-			return true;
-		}
-		break;
-	case Instructions::FUNCT3::AND:
-		switch(instr.funct7()){
-		case Instructions::FUNCT7::AND:
+		case Instructions::FUNCT3::AND:
 			execute = &RiscV::_and;
 			break;
 		default:
@@ -420,6 +384,9 @@ bool RiscV::decode_op()
 			return true;
 		}
 		break;
+	default:
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
 	}
 	return false;
 }
