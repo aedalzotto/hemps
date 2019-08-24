@@ -553,6 +553,24 @@ bool RiscV::decode_system()
 			return true;
 		}
 		break;
+	case Instructions::FUNCT3::CSRRW:
+		execute = &RiscV::csrrw;
+		break;
+	case Instructions::FUNCT3::CSRRS:
+		execute = &RiscV::csrrs;
+		break;
+	case Instructions::FUNCT3::CSRRC:
+		execute = &RiscV::csrrc;
+		break;
+	case Instructions::FUNCT3::CSRRWI:
+		execute = &RiscV::csrrwi;
+		break;
+	case Instructions::FUNCT3::CSRRSI:
+		execute = &RiscV::csrrsi;
+		break;
+	case Instructions::FUNCT3::CSRRCI:
+		execute = &RiscV::csrrci;
+		break;
 	default:
 		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
 		return true;
@@ -1132,6 +1150,36 @@ bool RiscV::rem()
 bool RiscV::remu()
 {
 
+}
+
+bool RiscV::csrrw()
+{
+
+}
+
+bool RiscV::csrrs()
+{
+
+}
+
+bool RiscV::csrrc()
+{
+
+}
+
+bool RiscV::csrrwi()
+{
+
+}
+
+bool RiscV::csrrsi()
+{
+
+}
+
+bool RiscV::csrrci()
+{
+	
 }
 
 bool RiscV::sret()

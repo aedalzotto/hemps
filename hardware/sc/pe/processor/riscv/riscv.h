@@ -631,6 +631,48 @@ private:
 	bool remu();
 
 	/**
+	 * @brief Atomic Read/Write CSR
+	 * 
+	 * @return False.
+	 */
+	bool csrrw();
+
+	/**
+	 * @brief Atomic Read and Set Bits in CSR
+	 * 
+	 * @return False.
+	 */
+	bool csrrs();
+
+	/**
+	 * @brief Atomic Read and Clear Bits in CSR
+	 * 
+	 * @return False.
+	 */
+	bool csrrc();
+
+	/**
+	 * @brief Atomic Read/Write CSR Immediate
+	 * 
+	 * @return False.
+	 */
+	bool csrrwi();
+
+	/**
+	 * @brief Atomic Read and Set Bits in CSR Immediate
+	 * 
+	 * @return False.
+	 */
+	bool csrrsi();
+
+	/**
+	 * @brief Atomic Read and Clear Bits in CSR Immediate
+	 * 
+	 * @return False.
+	 */
+	bool csrrci();
+
+	/**
 	 * @brief Return from trap under S-Mode
 	 * 
 	 * @return True. Can raise exception.

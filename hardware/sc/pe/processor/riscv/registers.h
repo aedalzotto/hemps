@@ -169,8 +169,13 @@ namespace Instructions {
 		FENCE = 0b000,
 
 		// SYSTEM
-		PRIV = 0b000,
-
+		PRIV   = 0b000,
+		CSRRW  = 0b001,
+		CSRRS  = 0b010,
+		CSRRC  = 0b011,
+		CSRRWI = 0b101,
+		CSRRSI = 0b110,
+		CSRRCI = 0b111
 	};
 	enum FUNCT7 {
 		// OP-IMM
