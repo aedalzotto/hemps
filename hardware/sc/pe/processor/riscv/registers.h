@@ -169,7 +169,8 @@ namespace Instructions {
 		FENCE = 0b000,
 
 		// SYSTEM
-		ECALL_EBREAK = 0b000
+		PRIV = 0b000,
+
 	};
 	enum FUNCT7 {
 		// OP-IMM
@@ -182,12 +183,26 @@ namespace Instructions {
 		AND_OR_XOR   = 0b0000000,
 		SLL_SRL      = 0b0000000,
 		SUB_SRA      = 0b0100000,
-		MULDIV 		 = 0b0000001
+		MULDIV 		 = 0b0000001,
 
+		// SYSTEM
+		ECALL_EBREAK = 0b0000000,
+		SRET_WFI	 = 0b0001000,
+		MRET		 = 0b0011000,
+		SFENCE_VMA	 = 0b0001001
 	};
-	enum IMM_11_0 {
-		ECALL  = 0b000000000000,
-		EBREAK = 0b000000000001,
+	enum RS2 {
+		// SYSTEM
+		ECALL  = 0b00000,
+		EBREAK = 0b00001,
+		RET	   = 0b00010,
+		WFI    = 0b00101
+	};
+	enum RS1 {
+		SYSTEM = 0b00000
+	};
+	enum RD {
+		SYSTEM = 0b00000
 	};
 };
 

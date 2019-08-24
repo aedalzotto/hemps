@@ -631,6 +631,37 @@ private:
 	bool remu();
 
 	/**
+	 * @brief Return from trap under S-Mode
+	 * 
+	 * @return True. Can raise exception.
+	 */
+	bool sret();
+
+	/**
+	 * @brief Return from trap under M-Mode
+	 * 
+	 * @return True. Can raise exception.
+	 */
+	bool mret();
+
+
+	/**
+	 * @brief Wait for Interrupt
+	 * 
+	 * @return True if TW=1 in mstatus, generating exception.
+	 */
+	bool wfi();
+
+	/**
+	 * @brief Supervisor memory-management fence
+	 * 
+	 * @detail Implemented as NOP
+	 * 
+	 * @return False.
+	 */
+	bool sfence_vma();
+
+	/**
 	 * @brief Pointer to execute function that will be set by the decoder.
 	 * 
 	 * @return True if jump happened by branch, jump or exception.

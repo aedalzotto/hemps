@@ -494,13 +494,59 @@ bool RiscV::decode_store()
 bool RiscV::decode_system()
 {
 	switch(instr.funct3()){
-	case Instructions::FUNCT3::ECALL_EBREAK:
-		switch(instr.imm_11_0()){
-		case Instructions::IMM_11_0::ECALL:
-			execute = &RiscV::ecall;
+	case Instructions::FUNCT3::PRIV:
+		switch(instr.funct7()){
+		case Instructions::FUNCT7::ECALL_EBREAK:
+			if(!(instr.rs1() || instr.rd())){
+				switch(instr.rs2()){
+				case Instructions::RS2::ECALL:
+					execute = &RiscV::ecall;
+					break;
+				case Instructions::RS2::EBREAK:
+					execute = &RiscV::ebreak;
+					break;
+				default:
+					handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+					return true;
+				}
+			} else {
+				handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+				return true;
+			}
 			break;
-		case Instructions::IMM_11_0::EBREAK:
-			execute = &RiscV::ebreak;
+		case Instructions::FUNCT7::SRET_WFI:
+			if(!(instr.rs1() || instr.rd())){
+				switch(instr.rs2()){
+				case Instructions::RS2::RET:
+					execute = &RiscV::sret;
+					break;
+				case Instructions::RS2::WFI:
+					execute = &RiscV::wfi;
+					break;
+				default:
+					handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+					return true;
+				}
+			} else {
+				handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+				return true;
+			}
+			break;
+		case Instructions::FUNCT7::MRET:
+			if(!(instr.rs1() || instr.rd()) && instr.rs2() == Instructions::RS2::RET){
+				execute = &RiscV::mret;
+			} else {
+				handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+				return true;
+			}
+			break;
+		case Instructions::FUNCT7::SFENCE_VMA:
+			if(!instr.rd()){
+				execute = &RiscV::sfence_vma;
+			} else {
+				handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+				return true;
+			}
 			break;
 		default:
 			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
@@ -1084,6 +1130,26 @@ bool RiscV::rem()
 }
 
 bool RiscV::remu()
+{
+
+}
+
+bool RiscV::sret()
+{
+
+}
+
+bool RiscV::mret()
+{
+
+}
+
+bool RiscV::wfi()
+{
+
+}
+
+bool RiscV::sfence_vma()
 {
 
 }
