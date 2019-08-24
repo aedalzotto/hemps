@@ -207,7 +207,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 		priv.set(Privilege::Level::SUPERVISOR);	// New privilege
 		mstatus.SPIE() = mstatus.SIE();			// Previous interrupt-enable of target mode
 		mstatus.SIE() = 0;						// Disable interrupt-enable of target mode
-		sepc.write(pc.read());					// Previous PC
+		sepc.write(pc.read()+4);				// Previous PC
 		pc.write(stvec.BASE());					// Synchronous exceptions are always DIRECT
 	} else {	// Handle in M-Mode
 		mcause.interrupt() = 0;
@@ -217,7 +217,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 		priv.set(Privilege::Level::MACHINE);	// New privilege
 		mstatus.MPIE() = mstatus.MIE();			// Previous interrupt-enable of target mode
 		mstatus.MIE() = 0;						// Disable interrupt-enable of target mode
-		mepc.write(pc.read());					// Previous PC
+		mepc.write(pc.read()+4);				// Previous PC
 		pc.write(mtvec.BASE());					// Synchronous exceptions are always DIRECT
 	}
 }
@@ -1114,42 +1114,111 @@ bool RiscV::ebreak()
 
 bool RiscV::mul()
 {
+	wait(Timings::MUL);
 
+	x[instr.rd()].write((uint32_t)x[instr.rs1()].read() * (uint32_t)x[instr.rs2()].read());
+
+	return false;
 }
 
 bool RiscV::mulh()
 {
+	wait(Timings::MUL);
 
+	uint64_t res = (int64_t)x[instr.rs1()].read() * (int64_t)x[instr.rs2()].read();
+	uint32_t high = res >> 32;
+	
+	x[instr.rd()].write(high);
+
+	return false;
 }
 
 bool RiscV::mulhsu()
 {
+	wait(Timings::MUL);
 
+	uint64_t res = (int64_t)x[instr.rs1()].read() * (uint64_t)x[instr.rs2()].read();
+	uint32_t high = res >> 32;
+	
+	x[instr.rd()].write(high);
+
+	return false;
 }
 
 bool RiscV::mulhu()
 {
+	wait(Timings::MUL);
 
+	uint64_t res = (uint64_t)x[instr.rs1()].read() * (uint64_t)x[instr.rs2()].read();
+	uint32_t high = res >> 32;
+	
+	x[instr.rd()].write(high);
+
+	return false;
 }
 
 bool RiscV::div()
 {
+	wait(Timings::DIV);
 
+	if(!x[instr.rs1()].read()){ // 0 divided by anything is 0
+		x[instr.rd()].write(0);
+	} else if(!x[instr.rs2()].read()){ // Div by 0
+		x[instr.rd()].write((uint32_t)-1); // Max out
+	} else if(x[instr.rs1()].read() == 1 && (int32_t)x[instr.rs2()].read() == -1){ // Overflow
+		x[instr.rd()].write(x[instr.rs1()].read()); // Writes the dividend
+	} else {
+		x[instr.rd()].write((int32_t)x[instr.rs1()].read() / (int32_t)x[instr.rs2()].read());
+	}
+
+	return false;
 }
 
 bool RiscV::divu()
 {
+	wait(Timings::DIV);
 
+	if(!x[instr.rs1()].read()){ // 0 divided by anything is 0
+		x[instr.rd()].write(0);
+	} else if(!x[instr.rs2()].read()){ // Div by 0
+		x[instr.rd()].write((uint32_t)-1); // Max out
+	} else {
+		x[instr.rd()].write((uint32_t)x[instr.rs1()].read() / (uint32_t)x[instr.rs2()].read());
+	}
+
+	return false;
 }
 
 bool RiscV::rem()
 {
+	wait(Timings::DIV);
 
+	if(!x[instr.rs1()].read()){ // 0 divided by anything is 0
+		x[instr.rd()].write(0);
+	} else if(!x[instr.rs2()].read()){ // Div by 0
+		x[instr.rd()].write(x[instr.rs1()].read()); // Writes the dividend
+	} else if(x[instr.rs1()].read() == 1 && (int32_t)x[instr.rs2()].read() == -1){ // Overflow
+		x[instr.rd()].write(0); // No remainder
+	} else {
+		x[instr.rd()].write((int32_t)x[instr.rs1()].read() % (int32_t)x[instr.rs2()].read());
+	}
+
+	return false;
 }
 
 bool RiscV::remu()
 {
+	wait(Timings::DIV);
 
+	if(!x[instr.rs1()].read()){ // 0 divided by anything is 0
+		x[instr.rd()].write(0);
+	} else if(!x[instr.rs2()].read()){ // Div by 0
+		x[instr.rd()].write(x[instr.rs1()].read()); // Writes the dividend
+	} else {
+		x[instr.rd()].write((uint32_t)x[instr.rs1()].read() % (uint32_t)x[instr.rs2()].read());
+	}
+
+	return false;
 }
 
 bool RiscV::csrrw()
@@ -1184,21 +1253,72 @@ bool RiscV::csrrci()
 
 bool RiscV::sret()
 {
+	wait(Timings::LOGICAL);
 
+	// Can only be called in M and S-Mode and if SRET trap is disabled
+	if(priv.get() == Privilege::Level::USER || mstatus.TSR()){
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+	} else {
+		// Manipulate the privilege stack
+		mstatus.SIE() = mstatus.SPIE();
+		priv.set((Privilege::Level)((uint32_t)mstatus.SPP()));
+		mstatus.SPIE() = 1;
+		mstatus.SPP() = (uint32_t)Privilege::Level::USER;
+
+		// Return to exception pc
+		pc.write(sepc.read());
+	}
+
+	return true;
 }
 
 bool RiscV::mret()
 {
+	wait(Timings::LOGICAL);
 
+	// Can only be called in M-Mode
+	if(priv.get() != Privilege::Level::MACHINE){
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+	} else {
+		// Manipulate the privilege stack
+		mstatus.MIE() = mstatus.MPIE();
+		priv.set((Privilege::Level)((uint32_t)mstatus.MPP()));
+		mstatus.MPIE() = 1;
+		mstatus.MPP() = (uint32_t)Privilege::Level::USER;
+
+		// Return to exception pc
+		pc.write(mepc.read());
+	}
+
+	return true;
 }
 
 bool RiscV::wfi()
 {
+	wait(Timings::LOGICAL);
 
+	// Not available in U-Mode or if timeout wait in S-Mode
+	if(priv.get() == Privilege::Level::USER || (mstatus.TW() && priv.get() == Privilege::Level::SUPERVISOR)){
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+	
+	// NOP
+
+	return false;
 }
 
 bool RiscV::sfence_vma()
 {
+	wait(Timings::LOGICAL);
 
+	if(priv.get() == Privilege::Level::USER){
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+
+	// NOP
+
+	return false;
 }
 

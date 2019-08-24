@@ -690,16 +690,18 @@ private:
 	/**
 	 * @brief Wait for Interrupt
 	 * 
-	 * @return True if TW=1 in mstatus, generating exception.
+	 * @detail Implemented as NOP but can raise exception.
+	 * 
+	 * @return True if exception raised.
 	 */
 	bool wfi();
 
 	/**
 	 * @brief Supervisor memory-management fence
 	 * 
-	 * @detail Implemented as NOP
+	 * @detail Implemented as NOP.
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool sfence_vma();
 
