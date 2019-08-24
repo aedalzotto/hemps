@@ -348,7 +348,35 @@ bool RiscV::decode_op()
 		}
 		break;
 	case Instructions::FUNCT7::MULDIV:
-		// @todo Implement RV32M instructions
+		switch(instr.funct3()){
+		case Instructions::FUNCT3::MUL:
+			execute = &RiscV::mul;
+			break;
+		case Instructions::FUNCT3::MULH:
+			execute = &RiscV::mulh;
+			break;
+		case Instructions::FUNCT3::MULHSU:
+			execute = &RiscV::mulhsu;
+			break;
+		case Instructions::FUNCT3::MULHU:
+			execute = &RiscV::mulhu;
+			break;
+		case Instructions::FUNCT3::DIV:
+			execute = &RiscV::div;
+			break;
+		case Instructions::FUNCT3::DIVU:
+			execute = &RiscV::divu;
+			break;
+		case Instructions::FUNCT3::REM:
+			execute = &RiscV::rem;
+			break;
+		case Instructions::FUNCT3::REMU:
+			execute = &RiscV::remu;
+			break;
+		default:
+			handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+			return true;
+		}
 		break;
 	//case Instructions::FUNCT7::ADD_SLT_SLTU:
 	//case Instructions::FUNCT7::AND_OR_XOR:
@@ -1019,3 +1047,44 @@ bool RiscV::ebreak()
 
 	return false;
 }
+
+bool RiscV::mul()
+{
+
+}
+
+bool RiscV::mulh()
+{
+
+}
+
+bool RiscV::mulhsu()
+{
+
+}
+
+bool RiscV::mulhu()
+{
+
+}
+
+bool RiscV::div()
+{
+
+}
+
+bool RiscV::divu()
+{
+
+}
+
+bool RiscV::rem()
+{
+
+}
+
+bool RiscV::remu()
+{
+
+}
+

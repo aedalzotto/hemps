@@ -559,6 +559,78 @@ private:
 	bool ebreak();
 
 	/**
+	 * @brief Multiply
+	 * 
+	 * @detail rd ← ux(rs1) × ux(rs2)
+	 * 
+	 * @return False.
+	 */
+	bool mul();
+	
+	/**
+	 * @brief Multiply High Signed Signed
+	 * 
+	 * @detail rd ← (sx(rs1) × sx(rs2)) » xlen
+	 * 
+	 * @return False.
+	 */
+	bool mulh();
+	
+	/**
+	 * @brief Multiply High Signed Unsigned
+	 * 
+	 * @detail rd ← (sx(rs1) × ux(rs2)) » xlen
+	 * 
+	 * @return False.
+	 */
+	bool mulhsu();
+	
+	/**
+	 * @brief Multiply High Unsigned Unsigned
+	 * 
+	 * @detail rd ← (ux(rs1) × ux(rs2)) » xlen
+	 * 
+	 * @return False.
+	 */
+	bool mulhu();
+	
+	/**
+	 * @brief Divide Signed
+	 * 
+	 * @detail rd ← sx(rs1) ÷ sx(rs2)
+	 * 
+	 * @return False.
+	 */
+	bool div();
+	
+	/**
+	 * @brief Divide Unsigned
+	 * 
+	 * @detail rd ← ux(rs1) ÷ ux(rs2)
+	 * 
+	 * @return False.
+	 */
+	bool divu();
+	
+	/**
+	 * @brief Remainder Signed
+	 * 
+	 * @detail rd ← sx(rs1) mod sx(rs2)
+	 * 
+	 * @return False.
+	 */
+	bool rem();
+	
+	/**
+	 * @brief Remainder Unsigned
+	 * 
+	 * @detail rd ← ux(rs1) mod ux(rs2)
+	 * 
+	 * @return False.
+	 */
+	bool remu();
+
+	/**
 	 * @brief Pointer to execute function that will be set by the decoder.
 	 * 
 	 * @return True if jump happened by branch, jump or exception.

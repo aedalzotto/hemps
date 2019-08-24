@@ -137,6 +137,10 @@ namespace Instructions {
 		MULH   = 0b001,
 		MULHSU = 0b010,
 		MULHU  = 0b011,
+		DIV	   = 0b100,
+		DIVU   = 0b101,
+		REM    = 0b110,
+		REMU   = 0b111,
 
 		// JALR
 		JALR = 0b000,
@@ -427,4 +431,6 @@ namespace Timings {
 	static const uint32_t MEM_READ = 1;
 	static const uint32_t DECODE = 1;
 	static const uint32_t LOGICAL = 1;
+	static const uint32_t MUL = 4;
+	static const uint32_t DIV = 16;
 };
