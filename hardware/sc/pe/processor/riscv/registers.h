@@ -453,4 +453,47 @@ namespace Timings {
 	static const uint32_t LOGICAL = 1;
 	static const uint32_t MUL = 4;
 	static const uint32_t DIV = 16;
+	static const uint32_t CSR = 2;
+};
+
+namespace CSR
+{
+	static const uint16_t RWA_MASK = 0x0C00;
+	static const uint16_t LVL_MASK = 0x0300;
+	static const uint16_t RO = 0x0C00;
+	static const uint16_t LVL_SHIFT = 8;
+
+	enum Address : uint16_t {
+		/* Supervisor CSRs */
+		SSTATUS = 0x100,
+		SIE		= 0x104,
+		STVEC	= 0x105,
+		
+		SSCRATCH = 0x140,
+		SEPC,
+		SCAUSE,
+		STVAL,
+		SIP,
+
+		SATP	 = 0x180,
+
+		/* Machine CSRs */
+		MVENDORID = 0xF11,
+		MARCHID,
+		MIMPID,
+		MHARTID,
+
+		MSTATUS = 0x300,
+		MISA,
+		MEDELEG,
+		MIDELEG,
+		MIE,
+		MTVEC,
+		
+		MSCRATCH = 0x340,
+		MEPC,
+		MCAUSE,
+		MTVAL,
+		MIP
+	};
 };

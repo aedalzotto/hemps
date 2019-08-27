@@ -17,7 +17,8 @@ SC_MODULE_EXPORT(RiscV);
 #endif
 
 RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) : 
-				sc_module(name_), router_addr(router_addr_)
+				sc_module(name_), router_addr(router_addr_),
+				mvendorid(0), marchid(0), mimpid(0), mhartid(0)
 {
 	SC_THREAD(cpu);
 	sensitive << clock.pos();// << mem_pause.pos();
@@ -29,7 +30,8 @@ void RiscV::cpu()
 	reset();
 
 	while(true) {
-		// @todo Save pc on mem_pause ??
+		// Don't save PC on mem_pause: deprecated
+
 		// @todo Inform externally of current page ??
 
 		x[0].write(0);
@@ -49,10 +51,10 @@ void RiscV::cpu()
 		if(decode()) // If exception occurred, continues to exception PC
 			continue;
 
-		if((this->*execute)())
-			continue;
+		if((this->*execute)())	// If branch or exception, continues to
+			continue;			// exception/branch/jump address
 
-		pc.next();
+		pc.next();	// If normal execution go to next PC
 	}
 
 }
@@ -202,22 +204,60 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 	if(priv.get() != Privilege::Level::MACHINE && (medeleg.read() & (1 << code))){ // Handle in S-Mode
 		scause.interrupt() = 0;
 		scause.exception_code() = code;
-		stval.write(0);
 		mstatus.SPP() = (uint32_t)priv.get();	// Previous privilege
 		priv.set(Privilege::Level::SUPERVISOR);	// New privilege
 		mstatus.SPIE() = mstatus.SIE();			// Previous interrupt-enable of target mode
 		mstatus.SIE() = 0;						// Disable interrupt-enable of target mode
 		sepc.write(pc.read()+4);				// Previous PC
+		switch(code){
+			case Exceptions::CODE::INSTRUCTION_ACCESS_FAULT:
+			case Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::INSTRUCTION_PAGE_FAULT:
+			case Exceptions::CODE::LOAD_ACCESS_FAULT:
+			case Exceptions::CODE::LOAD_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::LOAD_PAGE_FAULT:
+			case Exceptions::CODE::STORE_AMO_ACCESS_FAULT:
+			case Exceptions::CODE::STORE_AMO_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::STORE_AMO_PAGE_FAULT:
+			case Exceptions::CODE::BREAKPOINT:
+				stval.write(pc.read());
+				break;
+			case Exceptions::ILLEGAL_INSTRUCTION:
+				stval.write(instr.read());
+				break;
+			default:
+				stval.write(0);
+				break;	
+		}
 		pc.write(stvec.BASE());					// Synchronous exceptions are always DIRECT
 	} else {	// Handle in M-Mode
 		mcause.interrupt() = 0;
 		mcause.exception_code() = code;
-		mtval.write(0);
 		mstatus.MPP() = (uint32_t)priv.get();	// Previous privilege
 		priv.set(Privilege::Level::MACHINE);	// New privilege
 		mstatus.MPIE() = mstatus.MIE();			// Previous interrupt-enable of target mode
 		mstatus.MIE() = 0;						// Disable interrupt-enable of target mode
 		mepc.write(pc.read()+4);				// Previous PC
+		switch(code){
+			case Exceptions::CODE::INSTRUCTION_ACCESS_FAULT:
+			case Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::INSTRUCTION_PAGE_FAULT:
+			case Exceptions::CODE::LOAD_ACCESS_FAULT:
+			case Exceptions::CODE::LOAD_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::LOAD_PAGE_FAULT:
+			case Exceptions::CODE::STORE_AMO_ACCESS_FAULT:
+			case Exceptions::CODE::STORE_AMO_ADDRESS_MISALIGNED:
+			case Exceptions::CODE::STORE_AMO_PAGE_FAULT:
+			case Exceptions::CODE::BREAKPOINT:
+				mtval.write(pc.read());
+				break;
+			case Exceptions::ILLEGAL_INSTRUCTION:
+				mtval.write(instr.read());
+				break;
+			default:
+				mtval.write(0);
+				break;	
+		}
 		pc.write(mtvec.BASE());					// Synchronous exceptions are always DIRECT
 	}
 }
@@ -812,35 +852,10 @@ bool RiscV::lw()
 	}
 
 	const uint32_t address = r.read() & 0xFFFFFFFC;
+
+	// @todo Paging mem_read
 	mem_address.write(address);	// Address the memory with word address (4-byte aligned).
-	wait(1);
-
-	// Verifies the mem_pause signal at the first execution cycle
-	if(mem_pause.read()){
-		mem_address.write(pc.read());	// Keep the last memory address before mem_pause = '1'
-		wait(1);
-		while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
-			wait(1);
-
-		mem_address.write(address);// Address the memory with word address.
-		wait(1);
-	}
-
-	prefetch = true;
-	prefetched_opcode = mem_data_r.read();
-	mem_address.write(state->pc);
-	wait(1);
-
-	// Verifies the mem_pause signal at the second execution cycle
-	if (mem_pause.read()) {
-		mem_address.write(ptr & word_addr);// Keep the last memory address before mem_pause = '1'
-
-		while (mem_pause.read())	// Stalls the CPU while mem_pause = '1'
-			wait(1);
-
-		mem_address.write(state->pc);// Address the next instruction
-		wait(1);
-	}
+	wait(Timings::MEM_READ);
 
 	x[instr.rs2()].write(mem_data_r.read());
 }
@@ -1223,32 +1238,130 @@ bool RiscV::remu()
 
 bool RiscV::csrrw()
 {
+	wait(Timings::CSR);
 
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	csr->write((x[instr.rs1()].read() & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::csrrs()
 {
+	wait(Timings::CSR);
 
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	bool rw = true;
+	if(!instr.rs1())	// RO instruction
+		rw = false;
+
+	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	if(rw)
+		csr->write(((x[instr.rd()].read() | x[instr.rs1()].read()) & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::csrrc()
 {
+	wait(Timings::CSR);
 
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	bool rw = true;
+	if(!instr.rs1())	// RO instruction
+		rw = false;
+
+	if(csr_helper(instr.imm_11_0(), rw, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	if(rw)
+		csr->write(((~x[instr.rd()].read() & x[instr.rs1()].read()) & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::csrrwi()
 {
+	wait(Timings::CSR);
 
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	csr->write(((uint32_t)instr.rs1() & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::csrrsi()
 {
+	wait(Timings::CSR);
 
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	bool rw = true;
+	if(!instr.rs1())	// RO instruction
+		rw = false;
+
+	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	if(rw)
+		csr->write((((uint32_t)instr.rs1() | x[instr.rs1()].read()) & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::csrrci()
 {
-	
+	wait(Timings::CSR);
+
+	Register *csr = nullptr;
+	uint32_t wmand = -1;
+	uint32_t wmor  =  0;
+	uint32_t rm    = -1;
+
+	bool rw = true;
+	if(!instr.rs1())	// RO instruction
+		rw = false;
+
+	if(csr_helper(instr.imm_11_0(), rw, csr, wmand, wmor, rm))
+		return true;	// Exception has been raised.
+
+	x[instr.rd()].write(csr->read() & rm);
+	if(rw)
+		csr->write(((~(uint32_t)instr.rs1() & x[instr.rs1()].read()) & wmand) | wmor);
+
+	return false;
 }
 
 bool RiscV::sret()
@@ -1322,3 +1435,130 @@ bool RiscV::sfence_vma()
 	return false;
 }
 
+bool RiscV::csr_helper(uint16_t addr, bool rw, Register *csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask)
+{
+	// Access CSR
+	csr 		= nullptr;
+	wmask_and 	= 0xFFFFFFFF;
+	wmask_or	= 0x00000000;
+	rmask 		= 0xFFFFFFFF;
+
+	// Check R/W permissions
+	const uint16_t rwmask = addr & CSR::RWA_MASK;
+	if(rwmask == CSR::RO && rw){	// Read-only
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+
+	// Check privilege permission
+	const uint8_t level = (addr & CSR::LVL_MASK) >> CSR::LVL_SHIFT;
+	if(level < (uint8_t)priv.get()){	// Not enough privilege
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+
+	switch(addr){
+	case CSR::Address::MISA:
+		csr = &mstatus;
+		wmask_and = 0x3C000000;	// Only write to empty field.
+		wmask_or  = 0x40141100; // 32-bit MSU
+		break;
+	case CSR::Address::MVENDORID:
+		csr = &mvendorid;	// already r-o
+		break;
+	case CSR::Address::MARCHID:
+		csr = &marchid;	// already r-o
+		break;
+	case CSR::Address::MIMPID:
+		csr = &mimpid;	// already r-o
+		break;
+	case CSR::Address::MHARTID:
+		csr = &mhartid;	// already r-o
+		break;
+	case CSR::Address::MSTATUS:
+		// @todo Block value 0b10 to be written to MPP
+		csr = &mstatus;
+		wmask_and = 0x007E19AA;	// WPRIV + FS off + UIE/UPIE 0 + XS ro + SD off
+		rmask = 0x007E19AA;	// WPRIV + FS off + UIE/UPIE 0 + XS off + SD off
+		break;
+	case CSR::Address::MTVEC:
+		// @todo Block value 0x11 to be written to MODE
+		csr = &mtvec;
+		wmask_and = 0xFFFFFFF3; // BASE 4B aligned
+		break;
+	case CSR::Address::MEDELEG:
+		csr = &medeleg;
+		wmask_and = 0xFFFFF7FF; // medeleg[11] 0
+		rmask = 0xFFFFF7FF; // medeleg[11] 0
+		break;
+	case CSR::Address::MIDELEG:	
+		csr = &mideleg;
+		wmask_and = 0xFFFFFEEE; // Disable U interrupts
+		rmask = 0xFFFFFEEE; // Disable U interrupts
+		break;
+	case CSR::Address::MIP:
+		csr = &mip;
+		wmask_and = 0x00000222;	// WPRIV + U off + MTIP/MSIP/MEIP ro
+		rmask = 0x00000AAA;	// WPRIV + U off
+		break;
+	case CSR::Address::MIE:
+		csr = &mie;
+		wmask_and = 0x00000AAA;	// WPRIV + U off
+		rmask = 0x00000AAA;	// WPRIV + U off
+		break;
+	case CSR::Address::MSCRATCH:
+		csr = &mscratch;
+		break;
+	case CSR::Address::MEPC:
+		csr = &mepc;
+		wmask_and = 0xFFFFFFFC; // 4B align
+		break;
+	case CSR::Address::MCAUSE:
+		csr = &mcause;	// WLRL
+		break;
+	case CSR::Address::MTVAL:
+		csr = &mtval;
+		break;
+	case CSR::Address::SSTATUS: // SSTATUS is restricted view of MSTATUS
+		csr = &mstatus;
+		wmask_and = 0x000C0122;	// WPRIV + FS off + UIE/UPIE 0 + XS ro + SD off
+		rmask = 0x000C0122;	// WPRIV + FS off + UIE/UPIE 0 + XS off + SD off
+		break;
+	case CSR::Address::STVEC:
+		// @todo Block value 0x11 to be written to MODE
+		csr = &stvec;
+		wmask_and = 0xFFFFFFF3; // BASE 4B aligned
+		break;
+	case CSR::Address::SIP:	// SIP is restricted view of MIP
+		csr = &mip;
+		wmask_and = 0x00000222;	// WPRIV + U off
+		rmask = 0x00000222;	// WPRIV + U off
+		break;
+	case CSR::Address::SIE:	// SIE is restricted view of MIE
+		csr = &mie;
+		wmask_and = 0x00000222;	// WPRIV + U off
+		rmask = 0x00000222;	// WPRIV + U off
+		break;
+	case CSR::Address::SSCRATCH:
+		csr = &sscratch;
+		break;
+	case CSR::Address::SEPC:
+		csr = &sepc;
+		wmask_and = 0xFFFFFFFC; // 4B align
+		break;
+	case CSR::Address::SCAUSE:
+		csr = &scause;	// WLRL
+		break;
+	case CSR::Address::STVAL:
+		csr = &stval;
+		break;
+	case CSR::Address::SATP:
+		csr = &satp;
+		break;
+	default:	// Unknown CSR
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
+	}
+
+	return false;
+}

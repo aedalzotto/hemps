@@ -38,6 +38,9 @@ public:
 	sc_out<sc_uint<32> > mem_address;
 	sc_in<sc_uint<32> >  mem_data_r;
 
+	/* Not in use. Declared for compatibility reasons */
+	sc_in<bool> mem_pause;
+
 	/**
 	 * @brief The loop of the RISC-V CPU.
 	 * 
@@ -91,10 +94,10 @@ private:
 	 * mtval:		Machine bad address or instruction.
 	 * mip:			Machine interrupt pending.
 	 */
-	const register_t mvendorid = 0;
-	const register_t marchid = 0;
-	const register_t mimpid = 0;
-	const register_t mhartid = 0;
+	Register mvendorid;
+	Register marchid;
+	Register mimpid;
+	Register mhartid;
 	Mstatus mstatus;
 	ISA::Misa misa;
 	Exceptions::Mer medeleg;
@@ -102,7 +105,7 @@ private:
 	Interrupts::Mir mie;
 	Mtvec mtvec;
 	//mcounteren
-	//mscratch
+	Register mscratch;
 	Address mepc;
 	Mcause mcause;
 	Register mtval;
@@ -135,7 +138,7 @@ private:
 	//sie
 	Mtvec stvec;
 	//scounteren
-	//sscratch
+	Register sscratch;
 	Address sepc;
 	Mcause scause;
 	Register stval;
@@ -640,35 +643,35 @@ private:
 	/**
 	 * @brief Atomic Read and Set Bits in CSR
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool csrrs();
 
 	/**
 	 * @brief Atomic Read and Clear Bits in CSR
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool csrrc();
 
 	/**
 	 * @brief Atomic Read/Write CSR Immediate
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool csrrwi();
 
 	/**
 	 * @brief Atomic Read and Set Bits in CSR Immediate
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool csrrsi();
 
 	/**
 	 * @brief Atomic Read and Clear Bits in CSR Immediate
 	 * 
-	 * @return False.
+	 * @return True if exception raised.
 	 */
 	bool csrrci();
 
@@ -712,4 +715,18 @@ private:
 	 */
 	bool (RiscV::*execute)();
 	
+
+	/**
+	 * @brief "Decodes" CSR and check permissions.
+	 * 
+	 * @param addr			Address of the CSR sent by the instruction.
+	 * @param rw			If instruction is RW.
+	 * @param *csr			Pointer to store the decoded CSR.
+	 * @param &wmask_and	AND mask for the CSR write.
+	 * @param &wmask_or		OR mask for the CSR write.
+	 * @param &rmask		AND mask for the CSR read.
+	 * 
+	 * @return True if invalid CSR of permission, raising exception.
+	 */
+	bool csr_helper(uint16_t addr, bool rw, Register *csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask);
 };
