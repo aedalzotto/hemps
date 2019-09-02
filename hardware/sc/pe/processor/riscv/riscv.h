@@ -163,29 +163,22 @@ private:
 	bool handle_interrupts();
 
 	/**
-	 * @brief Fetches an instruction from virtual/physical memory
+	 * @brief Fetches an instruction.
 	 * 
 	 * @return True if exception occurred
 	 */
 	bool fetch();
 
 	/**
-	 * @brief Load a register from virtual/physical memory
+	 * @brief Resolves paging Sv32/Bare mode
 	 * 
-	 * @param address The memory address to load from.
-	 * 
-	 * @return True if exception occurred
-	 */
-	bool load(sc_uint<34> address);
-
-	/**
-	 * @brief Store a register to virtual/physical memory
-	 * 
-	 * @param address The memory address to store to.
+	 * @param src_addr	Source address to load/store
+	 * @param &dst_addr Physical address to load/store
+	 * @param e_code	Exception code in case of page fault
 	 * 
 	 * @return True if exception occurred
 	 */
-	bool store(sc_uint<34> address);
+	bool paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code);
 
 	/**
 	 * @brief Reads XLEN from memory.

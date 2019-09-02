@@ -138,11 +138,22 @@ bool RiscV::handle_interrupts()
 
 bool RiscV::fetch()
 {
+	wait(Timings::FETCH);
+	Address phy_pc;
+	if(paging(pc, phy_pc, Exceptions::CODE::INSTRUCTION_PAGE_FAULT))
+		return true;
+	
+	instr.write(mem_read(phy_pc.read()));
+	return false;
+}
+
+bool RiscV::paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code)
+{
 	if(priv.get() == Privilege::Level::MACHINE || satp.MODE() == Satp::MODES::BARE){
-		instr.write(mem_read(pc.read()));
+		dst_addr.write(src_addr.read());
 		return false;
 	} else { // Sv32
-		Sv32::VirtualAddress va(pc);
+		Sv32::VirtualAddress va(src_addr);
 		Sv32::PhysicalAddress a(satp.PPN() * Sv32::PAGESIZE);
 		for(int i = Sv32::LEVELS - 1; i >= 0; i--){
 			Sv32::PhysicalAddress pte_addr(a.read() + va.VPN(i)*Sv32::PTESIZE);
@@ -150,7 +161,7 @@ bool RiscV::fetch()
 			pte.write(mem_read(pte_addr.read()));
 			if(!pte.V() || (!pte.R() && pte.W())){
 				// Not valid or Write-Only
-				handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
+				handle_exceptions(e_code);
 				return true;
 			} else if(pte.R() || pte.X()){
 				// Leaf PTE
@@ -160,7 +171,7 @@ bool RiscV::fetch()
 					// Memory execute allowed
 					if(i && pte.PPN(0)){
 						// Misaligned superpage
-						handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
+						handle_exceptions(e_code);
 						return true;
 					} else {
 						// Efectively access PTE
@@ -172,12 +183,12 @@ bool RiscV::fetch()
 							pa.PPN(0) = va.VPN(0);
 						}
 						pa.PPN(Sv32::LEVELS - 1) = pte.PPN(Sv32::LEVELS - 1);
-						instr.write(mem_read(pa.PPN()*Sv32::PAGESIZE + pa.page_offset()));
+						dst_addr.write(pa.PPN()*Sv32::PAGESIZE + pa.page_offset());
 						return false;
 					}
 				} else {
 					// Invalid access type
-					handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
+					handle_exceptions(e_code);
 					return true;
 				}
 			} else {
@@ -186,7 +197,7 @@ bool RiscV::fetch()
 				continue;
 			}
 		}
-		handle_exceptions(Exceptions::CODE::INSTRUCTION_PAGE_FAULT);
+		handle_exceptions(e_code);
 		return true;
 	}
 }
@@ -827,12 +838,68 @@ bool RiscV::bgeu()
 
 bool RiscV::lb()
 {
-	
+	wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
+
+	// Load Byte must be 8-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
+		return true;
+
+	if(offset == 3){	// High byte
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+	} else if(offset == 2){
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+	} else if(offset){
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
+	} else {	// Low byte
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+	}
+	x[instr.rs2()].range(31, 8) = -1 * x[instr.rs2()].bit(7);	// Sign-extended
+
+	return false;
 }
 
 bool RiscV::lh()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
 
+	// Load Half must be 16-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+	if(offset % 2){
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	}
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
+		return true;
+
+	if(offset){	// High byte
+		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
+	} else {	// Low byte
+		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+	}
+	x[instr.rs2()].range(31, 16) = -1 * x[instr.rs2()].bit(15);	// Sign-extended
+
+	return false;
 }
 
 bool RiscV::lw()
@@ -851,23 +918,81 @@ bool RiscV::lw()
 		return true;
 	}
 
-	const uint32_t address = r.read() & 0xFFFFFFFC;
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
 
-	// @todo Paging mem_read
-	mem_address.write(address);	// Address the memory with word address (4-byte aligned).
-	wait(Timings::MEM_READ);
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
+		return true;
 
-	x[instr.rs2()].write(mem_data_r.read());
+	x[instr.rs2()].write(mem_read(phy_addr.read()));
+	return false;
 }
 
 bool RiscV::lbu()
 {
+		wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
 
+	// Load Byte must be 8-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
+		return true;
+
+	if(offset == 3){	// High byte
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+	} else if(offset == 2){
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+	} else if(offset){
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
+	} else {	// Low byte
+		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+	}
+	x[instr.rs2()].range(31, 8) = 0;	// 0-extended
+
+	return false;
 }
 
 bool RiscV::lhu()
 {
+	wait(Timings::LOGICAL);
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
 
+	// Load Half must be 16-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+	if(offset % 2){
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	}
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
+		return true;
+
+	if(offset){	// High byte
+		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
+	} else {	// Low byte
+		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+	}
+	x[instr.rs2()].range(31, 16) = 0;	// 0-extended
+
+	return false;
 }
 
 bool RiscV::sb()
