@@ -35,8 +35,11 @@ public:
 	sc_in<bool> reset_in;
 	sc_in<bool> intr_in;
 
-	sc_out<sc_uint<32> > mem_address;
-	sc_in<sc_uint<32> >  mem_data_r;
+	sc_out<sc_uint<32> > mem_address;	// Memory address bus
+	sc_in<sc_uint<32> >  mem_data_r;	// Memory data read bus
+	sc_out<sc_uint<4> >  mem_byte_we;	// Memory data write byte select
+	sc_out<sc_uint<32> > mem_data_w;	// Memory data write bus
+
 
 	/* Not in use. Declared for compatibility reasons */
 	sc_in<bool> mem_pause;
@@ -188,6 +191,14 @@ private:
 	 * @return XLEN bits from memory address.
 	 */
 	register_t mem_read(sc_uint<34> address);
+
+	/**
+	 * @brief Writes XLEN to memory.
+	 * 
+	 * @param address 	The memory address to be written.
+	 * @param value		The value to be written
+	 */
+	void mem_write(sc_uint<34> address, register_t value);
 
 	/**
 	 * @brief Handles synchronous exceptions

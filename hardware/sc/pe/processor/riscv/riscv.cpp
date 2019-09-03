@@ -68,7 +68,7 @@ void RiscV::reset()
 	pc.write(vectors::RESET);
 	mcause.write(0);
 
-	// mem_byte_we.write(0x0);
+	mem_byte_we.write(0x0);
 	wait(Timings::RESET);
 }
 
@@ -208,6 +208,13 @@ register_t RiscV::mem_read(sc_uint<34> address)
 	wait(Timings::MEM_READ);
 	register_t ret = mem_data_r.read();
 	return ret;
+}
+
+void RiscV::mem_write(sc_uint<34> address, register_t value)
+{
+	mem_address.write(address);
+	mem_data_w.write(value);
+	wait(Timings::MEM_WRITE);
 }
 
 void RiscV::handle_exceptions(Exceptions::CODE code)
@@ -931,7 +938,7 @@ bool RiscV::lw()
 
 bool RiscV::lbu()
 {
-		wait(Timings::LOGICAL);
+	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
 	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
@@ -997,17 +1004,103 @@ bool RiscV::lhu()
 
 bool RiscV::sb()
 {
+	wait(Timings::LOGICAL);
 
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
+
+	// Store Byte must be 8-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
+		return true;
+
+	if(offset == 3)
+		mem_byte_we.write(0x8); // High byte
+	else if(offset == 2)
+		mem_byte_we.write(0x4);
+	else if(offset)
+		mem_byte_we.write(0x2);
+	else
+		mem_byte_we.write(0x1); // Low half
+
+	mem_write(phy_addr.read(), x[instr.rs2()].read());
+	mem_byte_we.write(0x0);
+
+	return false;
 }
 
 bool RiscV::sh()
 {
+	wait(Timings::LOGICAL);
 
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
+
+	// Store Half must be 16-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+	if(offset % 2){
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	}
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
+		return true;
+
+	if(offset)
+		mem_byte_we.write(0xC); // High half
+	else
+		mem_byte_we.write(0x3); // Low half
+
+	mem_write(phy_addr.read(), x[instr.rs2()].read());
+	mem_byte_we.write(0x0);
+
+	return false;
 }
 
 bool RiscV::sw()
 {
+	wait(Timings::LOGICAL);
 
+	// Sign-extend offset
+	Register r;
+	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(11, 0) = instr.imm_11_0();
+	r.write(r.read() + x[instr.rs1()].read());
+
+	// Store Word must be 32-bit aligned
+	const uint32_t offset = r.read() & 0x00000003;
+	if(offset){
+		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
+		return true;
+	}
+
+	Address vir_addr;
+	vir_addr.write((r.read() & 0xFFFFFFFC));
+
+	Address phy_addr;
+	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
+		return true;
+
+	mem_byte_we.write(0xF); // Write whole byte
+	mem_write(phy_addr.read(), x[instr.rs2()].read());
+	mem_byte_we.write(0x0);
+
+	return false;
 }
 
 bool RiscV::addi()
