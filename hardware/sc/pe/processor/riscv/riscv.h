@@ -358,15 +358,71 @@ private:
 	 * 
 	 * @detail rd ← s8[rs1 + offset]
 	 * 
-	 * @return False.
+	 * @return True if exception occurred
 	 */
 	bool lb();
+
+	/**
+	 * @brief Load Half
+	 * 
+	 * @detail rd ← s16[rs1 + offset]
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool lh();
+
+	/**
+	 * @brief Load Word
+	 * 
+	 * @detail rd ← s32[rs1 + offset]
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool lw();
+
+	/**
+	 * @brief Load Byte Unsigned
+	 * 
+	 * @detail rd ← u8[rs1 + offset]
+	 * 
+	 * @return True if exception occurred
+	 */
 	bool lbu();
+
+	/**
+	 * @brief Load Half Unsigned
+	 * 
+	 * @detail rd ← u16[rs1 + offset]
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool lhu();
+
+	/**
+	 * @brief Store Byte
+	 * 
+	 * @detail u8[rs1 + offset] ← rs2
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool sb();
+
+	/**
+	 * @brief Store Half
+	 * 
+	 * @detail u16[rs1 + offset] ← rs2
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool sh();
+
+	/**
+	 * @brief Store Word
+	 * 
+	 * @detail u32[rs1 + offset] ← rs2
+	 * 
+	 * @return True if exception occurred.
+	 */
 	bool sw();
 
 	/**
