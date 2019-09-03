@@ -479,6 +479,8 @@ namespace CSR
 
 		SATP	 = 0x180,
 
+		SRAR = 0x5C0,
+
 		/* Machine CSRs */
 		MVENDORID = 0xF11,
 		MARCHID,
@@ -498,4 +500,15 @@ namespace CSR
 		MTVAL,
 		MIP
 	};
+};
+
+class Srar : public Register {
+public:
+	enum MODES {
+		SATP,
+		OFFSET
+	};
+	sc_dt::sc_uint_subref PS_28_3() { return reg.range(31, 6); }
+	sc_dt::sc_uint_bitref MODE() { return reg.bit(5); }
+	sc_dt::sc_uint_subref PN() { return reg.range(4, 0); }
 };

@@ -149,9 +149,24 @@ bool RiscV::fetch()
 
 bool RiscV::paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code)
 {
-	if(priv.get() == Privilege::Level::MACHINE || satp.MODE() == Satp::MODES::BARE){
+	if(priv.get() == Privilege::Level::MACHINE ||	// M-Mode is bare mode
+		(satp.MODE() == Satp::MODES::BARE && srar.MODE() == Srar::MODES::SATP)){
 		dst_addr.write(src_addr.read());
 		return false;
+	} else if(srar.MODE() == Srar::MODES::OFFSET){		
+		if(priv.get() == Privilege::Level::SUPERVISOR){ // Kernel is page 0
+			//current_page.write(0);
+			dst_addr.write(src_addr.read());
+			return false;
+		} else { // U-Mode with offset
+			//current_page.write(srar.PN());
+			sc_uint<XLEN> offset;
+			offset.range(28,3) = srar.PS_28_3();
+			offset *= srar.PN();
+
+			dst_addr.write(src_addr.read() | offset);
+			return false;
+		}
 	} else { // Sv32
 		Sv32::VirtualAddress va(src_addr);
 		Sv32::PhysicalAddress a(satp.PPN() * Sv32::PAGESIZE);

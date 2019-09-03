@@ -134,6 +134,9 @@ private:
 	 * 
 	 * SUPERVISOR PROTECTION AND TRANSLATION
 	 * satp:		Supervisor address translation and protection.
+	 * 
+	 * SUPERVISOR CUSTOM REGISTERS
+	 * srar:		Supervisor relative address register.
 	 */
 	//sstatus
 	//sedeleg
@@ -147,6 +150,7 @@ private:
 	Register stval;
 	//sip
 	Satp satp;
+	Srar srar;
 
 	/* PE router address. Used by the simulator */
 	half_flit_t router_addr;
