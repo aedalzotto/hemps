@@ -12,6 +12,7 @@
 .globl boot_slave
 boot_slave:
 	li		sp,sp_addr
+<<<<<<< HEAD:software/kernel/slave/riscv/boot.S
 
 	# Configure Syscall
 	//@todo mtvec.base = exceptions entry
@@ -19,12 +20,17 @@ boot_slave:
 	
 	# Configure addressing
 
+=======
+	# @TODO: SET ECALL ADDR
+	# @TODO: SET RELATIVE ADDRESSING
+>>>>>>> 4c2fc4ef4f7cddfbdbd1d2c51b6d07bf94ab2bc2:software/kernel/slave/rv32i/boot.S
 	jal		main
 $L1:
 	j		$L1
 
 #########################
 
+<<<<<<< HEAD:software/kernel/slave/riscv/boot.S
 exceptions_entry:				# Set to mtvec.BASE and VECTORED
 	j		exception_handler	# Exceptions (inc. ecall)
 interrupts_entry:				# Interrupts
@@ -79,6 +85,60 @@ interrupt_handler:
 	sw		t5,116(t0)		# reg[29] = t5
 	sw		t6,120(t0)		# reg[30] = t6
 	
+=======
+interrupt_service_routine_entry:  
+	j		interrupt_service_routine
+
+system_service_routine_entry:  
+	j		system_service_routine
+
+interrupt_service_routine:
+
+	# REGISTERS $26 AND $27 ARE RESERVED FOR THE OS in Plasma Core
+	# They are the registers k0 and k1 (Reserved for interrupt handler)
+	# RISC-V: CSR mscratch/sscratch
+	#la		$26,needTaskScheduling
+	#sw		$0,0($26)
+
+	# SAVE ra AND REGISTERS
+	# @TODO: SAVE TO MSCRATCH/SSCRATCH
+	la		s10,current		# Load address "current" to
+	lw		s10,0(s10)		# Load word from address current+0
+
+	sw		ra,0(s10)		# reg[0] = ra
+	sw		sp,4(s10)		# reg[1] = sp
+	#sw		gp,8(s10)		# reg[2] = gp
+	sw		tp,12(s10)		# reg[3] = tp
+	sw		t0,16(s10)		# reg[4] = t0
+	sw		t1,20(s10)		# reg[5] = t1
+	sw		t2,24(s10)		# reg[6] = t2
+	sw		s0,28(s10)		# reg[7] = s0
+	sw		s1,32(s10)		# reg[8] = s1
+	sw		a0,36(s10)		# reg[9] = a0
+	sw		a1,40(s10)		# reg[10] = a1
+	sw		a2,44(s10)		# reg[11] = a2
+	sw		a3,48(s10)		# reg[12] = a3
+	sw		a4,52(s10)		# reg[13] = a4
+	sw		a5,56(s10)		# reg[14] = a5
+	sw		a6,60(s10)		# reg[15] = a6
+	sw		a7,64(s10)		# reg[16] = a7
+	sw		s2,68(s10)		# reg[17] = s2
+	sw		s3,72(s10)		# reg[18] = s3
+	sw		s4,76(s10)		# reg[19] = s4
+	sw		s5,80(s10)		# reg[20] = s5
+	sw		s6,84(s10)		# reg[21] = s6
+	sw		s7,88(s10)		# reg[22] = s7
+	sw		s8,92(s10)		# reg[23] = s8
+	sw		s9,96(s10)		# reg[24] = s9
+    sw		s10,100(s10)	# reg[25] = s10
+	sw		s11,104(s10)	# reg[26] = s11
+	sw		t3,108(s10)		# reg[27] = t3
+	sw		t4,112(s10)		# reg[28] = t4
+	sw		t5,116(s10)		# reg[29] = t5
+	sw		t6,120(s10)		# reg[30] = t6
+	#sw		pc,124(s10)		# TODO: SAVE EPC
+
+>>>>>>> 4c2fc4ef4f7cddfbdbd1d2c51b6d07bf94ab2bc2:software/kernel/slave/rv32i/boot.S
 	li		sp,sp_addr
 
 	#JUMP TO INTERRUPT SERVICE ROUTINE
