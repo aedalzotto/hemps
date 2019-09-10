@@ -60,7 +60,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 	unsigned int _stack_pointer;
 	unsigned int stack_lenght;
 	unsigned int processor;
-	volatile unsigned int tcb_registers[30];
+	volatile unsigned int tcb_registers[32];
 	volatile unsigned int task_location_array[MAX_TASKS_APP];
 	unsigned int request_msg[REQUEST_SIZE*3];
 	unsigned int app_id;
@@ -76,7 +76,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 
 	tcb_aux->proc_to_migrate = -1;
 
-	_stack_pointer = tcb_aux->reg[25]; //plus one because the stack is initialized PAGE_SIZE - 1
+	_stack_pointer = tcb_aux->reg[sp]; //plus one because the stack is initialized PAGE_SIZE - 1
 
 #if TASK_MIGRATION_DEBUG
 	putsv("\tstack pointer antes: ", _stack_pointer);
@@ -91,7 +91,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 
 	stack_lenght = (PAGE_SIZE - _stack_pointer) / 4;
 
-	_stack_pointer = tcb_aux->reg[25];
+	_stack_pointer = tcb_aux->reg[sp];
 
 #if TASK_MIGRATION_DEBUG
 	putsv("\tstack lenght: ", stack_lenght);
@@ -118,14 +118,14 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 
 	p->program_counter = tcb_aux->pc - tcb_aux->offset;
 
-	for (int i=0; i<30; i++){
-		if (i == 27)
+	for (int i=0; i<32; i++){
+		if (i == ra)
 			tcb_registers[i] = tcb_aux->reg[i] - tcb_aux->offset;
 		else
 			tcb_registers[i] = tcb_aux->reg[i];
 	}
 
-	send_packet(p, (unsigned int) &tcb_registers, 30);
+	send_packet(p, (unsigned int) &tcb_registers, 32);
 	// ------- end tcb ------
 
 #if TASK_MIGRATION_DEBUG
@@ -302,15 +302,15 @@ void handle_migration_code(volatile ServiceHeader * p, TCB * migrate_tcb){
  */
 void handle_migration_TCB(volatile ServiceHeader * p, TCB * migrate_tcb){
 
-	volatile unsigned int tcb_registers[30];
+	volatile unsigned int tcb_registers[32];
 
 	migrate_tcb->pc = p->program_counter + migrate_tcb->offset;
 
 
-	DMNI_read_data((unsigned int) &tcb_registers, 30);
+	DMNI_read_data((unsigned int) &tcb_registers, 32);
 
 	for (int i=0; i<30; i++){
-		if (i == 27)
+		if (i == ra)
 			migrate_tcb->reg[i] = tcb_registers[i] + migrate_tcb->offset;
 		else
 			migrate_tcb->reg[i] = tcb_registers[i];
@@ -423,7 +423,7 @@ void handle_migration_request_msg(volatile ServiceHeader * p, TCB * migrate_tcb)
 void handle_migration_stack(volatile ServiceHeader * p, TCB * migrate_tcb){
 
 	if (p->stack_size > 0){
-		DMNI_read_data(migrate_tcb->offset + migrate_tcb->reg[25], p->stack_size);
+		DMNI_read_data(migrate_tcb->offset + migrate_tcb->reg[sp], p->stack_size);
 	}
 
 #if TASK_MIGRATION_DEBUG
