@@ -12,65 +12,73 @@
 .globl boot_slave
 boot_slave:
 	li		sp,sp_addr
+
+	# Configure Syscall
+	//@todo mtvec.base = exceptions entry
+	//@todo mtvec.mode = vectored
+	
+	# Configure addressing
+
 	jal		main
 $L1:
 	j		$L1
 
 #########################
 
-.org 0x3c # ISR address. Is this valid?
-interrupt_service_routine_entry:  
-	j		interrupt_service_routine
+exceptions_entry:				# Set to mtvec.BASE and VECTORED
+	j		exception_handler	# Exceptions (inc. ecall)
+interrupts_entry:				# Interrupts
+	j		interrupt_handler	# SSI
+	nop
+	j		interrupt_handler	# MSI
+	nop
+	j		interrupt_handler	# STI
+	nop
+	j		interrupt_handler	# MTI
+	nop
+	j		interrupt_handler	# SEI
+	nop
+	j		interrupt_handler	# MEI
 
-.org 0x44 # ECALL address? Is this valid?
-system_service_routine_entry:  
-	j		system_service_routine
+interrupt_handler:
+	# scratch CSRs are reserved to OS
+	# Save t0 to mscratch to let kernel use it
+	csrw	mscratch,t0
+	lw		t0,current		# Load "current" to t0
 
-interrupt_service_routine:
-
-	# REGISTERS $26 AND $27 ARE RESERVED FOR THE OS in Plasma Core
-	# They are the registers k0 and k1 (Reserved for interrupt handler)
-	# RISC-V to-do: s10 s11? or maybe look priviledged ISA manual?
-	#la		$26,needTaskScheduling
-	#sw		$0,0($26)
-
-	# SAVE ra AND REGISTERS
-	la		s10,current		# Load address "current" to s10
-	lw		s10,0(s10)		# Load word from address s10+0 to s10
-
-	sw		ra,0(s10)		# reg[0] = ra
-	sw		sp,4(s10)		# reg[1] = sp
-	#sw		gp,8(s10)		# reg[2] = gp
-	sw		tp,12(s10)		# reg[3] = tp
-	sw		t0,16(s10)		# reg[4] = t0
-	sw		t1,20(s10)		# reg[5] = t1
-	sw		t2,24(s10)		# reg[6] = t2
-	sw		s0,28(s10)		# reg[7] = s0
-	sw		s1,32(s10)		# reg[8] = s1
-	sw		a0,36(s10)		# reg[9] = a0
-	sw		a1,40(s10)		# reg[10] = a1
-	sw		a2,44(s10)		# reg[11] = a2
-	sw		a3,48(s10)		# reg[12] = a3
-	sw		a4,52(s10)		# reg[13] = a4
-	sw		a5,56(s10)		# reg[14] = a5
-	sw		a6,60(s10)		# reg[15] = a6
-	sw		a7,64(s10)		# reg[16] = a7
-	sw		s2,68(s10)		# reg[17] = s2
-	sw		s3,72(s10)		# reg[18] = s3
-	sw		s4,76(s10)		# reg[19] = s4
-	sw		s5,80(s10)		# reg[20] = s5
-	sw		s6,84(s10)		# reg[21] = s6
-	sw		s7,88(s10)		# reg[22] = s7
-	sw		s8,92(s10)		# reg[23] = s8
-	sw		s9,96(s10)		# reg[24] = s9
-    sw		s10,100(s10)	# reg[25] = s10
-	sw		s11,104(s10)	# reg[26] = s11
-	sw		t3,108(s10)		# reg[27] = t3
-	sw		t4,112(s10)		# reg[28] = t4
-	sw		t5,116(s10)		# reg[29] = t5
-	sw		t6,120(s10)		# reg[30] = t6
-	#sw		pc,124(s10)		# TODO: SAVE EPC
-
+	# Save registers
+	sw		ra,0(t0)		# reg[0] = ra
+	sw		sp,4(t0)		# reg[1] = sp
+	sw		gp,8(t0)		# reg[2] = gp
+	sw		tp,12(t0)		# reg[3] = tp
+	# sw		t0,16(t0)		# reg[4] = t0
+	sw		t1,20(t0)		# reg[5] = t1
+	sw		t2,24(t0)		# reg[6] = t2
+	sw		s0,28(t0)		# reg[7] = s0
+	sw		s1,32(t0)		# reg[8] = s1
+	sw		a0,36(t0)		# reg[9] = a0
+	sw		a1,40(t0)		# reg[10] = a1
+	sw		a2,44(t0)		# reg[11] = a2
+	sw		a3,48(t0)		# reg[12] = a3
+	sw		a4,52(t0)		# reg[13] = a4
+	sw		a5,56(t0)		# reg[14] = a5
+	sw		a6,60(t0)		# reg[15] = a6
+	sw		a7,64(t0)		# reg[16] = a7
+	sw		s2,68(t0)		# reg[17] = s2
+	sw		s3,72(t0)		# reg[18] = s3
+	sw		s4,76(t0)		# reg[19] = s4
+	sw		s5,80(t0)		# reg[20] = s5
+	sw		s6,84(t0)		# reg[21] = s6
+	sw		s7,88(t0)		# reg[22] = s7
+	sw		s8,92(t0)		# reg[23] = s8
+	sw		s9,96(t0)		# reg[24] = s9
+    sw		s10,100(t0)	# reg[25] = s10
+	sw		s11,104(t0)	# reg[26] = s11
+	sw		t3,108(t0)		# reg[27] = t3
+	sw		t4,112(t0)		# reg[28] = t4
+	sw		t5,116(t0)		# reg[29] = t5
+	sw		t6,120(t0)		# reg[30] = t6
+	
 	li		sp,sp_addr
 
 	#JUMP TO INTERRUPT SERVICE ROUTINE
@@ -82,7 +90,7 @@ interrupt_service_routine:
 
 ####################################################
 
-system_service_routine:
+exception_handler:
 	# registers $26 and $27 are reserved for kernel (in Plasma)
 	# RISC-V to-do: s10 s11? or maybe look priviledged ISA manual?
 	la		s10,current		# Load address "current" to s10

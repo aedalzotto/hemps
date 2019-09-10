@@ -238,7 +238,7 @@ void write_local_msg_to_task(TCB * task_tcb_ptr, int msg_lenght, int * msg_data)
 
 	Message * msg_ptr;
 
-	msg_ptr = (Message*)((task_tcb_ptr->offset) | ((unsigned int)task_tcb_ptr->reg[3])); //reg[3] = address message
+	msg_ptr = (Message*)((task_tcb_ptr->offset) | ((unsigned int)task_tcb_ptr->reg[a1])); //reg[a1] = address message
 
 	msg_ptr->length = msg_lenght;
 
@@ -246,7 +246,7 @@ void write_local_msg_to_task(TCB * task_tcb_ptr, int msg_lenght, int * msg_data)
 		msg_ptr->msg[i] = msg_data[i];
 
 	//Unlock the blocked task
-	task_tcb_ptr->reg[0] = TRUE;
+	task_tcb_ptr->reg[v0] = TRUE;
 
 	//Release task to execute
 	task_tcb_ptr->scheduling_ptr->waiting_msg = 0;
@@ -552,13 +552,13 @@ int handle_packet(volatile ServiceHeader * p) {
 
 		tcb_ptr = searchTCB(p->consumer_task);
 
-		msg_ptr = (Message *)(tcb_ptr->offset | tcb_ptr->reg[3]);
+		msg_ptr = (Message *)(tcb_ptr->offset | tcb_ptr->reg[a1]);
 
 		msg_ptr->length = p->msg_lenght;
 
 		DMNI_read_data((unsigned int)msg_ptr->msg, msg_ptr->length);
 
-		tcb_ptr->reg[0] = 1;
+		tcb_ptr->reg[v0] = 1;
 
 		//Release task to execute
 		tcb_ptr->scheduling_ptr->waiting_msg = 0;

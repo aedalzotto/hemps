@@ -24,7 +24,7 @@
  * that are running into each slave processor.
  */
 typedef struct {
-    unsigned int reg[30];       	//!<30 registers (Vn,An,Tn,Sn,RA)
+    unsigned int reg[32];       	//!<30 registers (Vn,An,Tn,Sn,RA)
     unsigned int pc;            	//!<program counter
     unsigned int offset;        	//!<initial address of the task code in page
     int       	 id;            	//!<identifier
