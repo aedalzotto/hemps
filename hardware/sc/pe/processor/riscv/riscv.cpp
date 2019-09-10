@@ -57,7 +57,7 @@ RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) :
 	mult_div_inst_tasks		= 0;
 
 	SC_THREAD(cpu);
-	sensitive << clock.pos();// << mem_pause.pos();
+	sensitive << clk.pos();// << mem_pause.pos();
 	//sensitive << mem_pause.neg();
 }
 

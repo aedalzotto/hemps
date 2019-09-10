@@ -5,6 +5,7 @@
 #include <systemc.h>
 #include "../standards.h"
 #include "processor/plasma/mlite_cpu.h"
+#include "processor/riscv/riscv.h"
 #include "dmni/dmni.h"
 #include "router/router_cc.h"
 #include "memory/ram.h"
@@ -109,7 +110,8 @@ SC_MODULE(pe) {
 
 	unsigned char shift_mem_page;
 
-	mlite_cpu	*	cpu;
+	// mlite_cpu	*	cpu;
+	RiscV		*	cpu;
 	ram			* 	mem;
 	dmni 		*	dm_ni;
 	router_cc 	*	router;
@@ -152,7 +154,8 @@ SC_MODULE(pe) {
 
 		shift_mem_page = (unsigned char) (log10(PAGE_SIZE_BYTES)/log10(2));
 	
-		cpu = new mlite_cpu("cpu", router_address);
+		// cpu = new mlite_cpu("cpu", router_address);
+		cpu = new RiscV("cpu", router_address);
 		cpu->clk(clock_hold);
 		cpu->reset_in(reset);
 		cpu->intr_in(irq);

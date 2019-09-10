@@ -14,7 +14,7 @@ boot_task:
 	jal main		# Execute main
    
 	mv a0, zero		# On return from main execute syscall with argument "0"
-	ecall			# Syscall address = ??
+	ecall			# Syscall address = set by kernel
 $L1:             	# Executes always that returns from syscall.
 	j $L1          	# infinite loop
   
@@ -22,8 +22,6 @@ $L1:             	# Executes always that returns from syscall.
 
 .globl SystemCall	# "registers that a global SystemCall function exists to C code"
 SystemCall:
-	ecall			# Syscall address = ??
+	ecall			# Syscall address = set by kernel
    
-	# JR: Jump to register
-	# Most commonly used jr ra
 	ret 			# Returns from syscall. $ra has the return address of the callee.

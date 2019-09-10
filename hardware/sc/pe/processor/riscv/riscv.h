@@ -31,7 +31,7 @@ public:
 	 * Module ports
 	 * All we be mantained to keep compatibility with HeMPS framework.
 	 */
-	sc_in_clk	clock;
+	sc_in_clk	clk;
 	sc_in<bool> reset_in;
 	sc_in<bool> intr_in;
 

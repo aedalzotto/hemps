@@ -12,17 +12,17 @@
 .globl boot_slave
 boot_slave:
 	li		sp,sp_addr
+	# @TODO: SET ECALL ADDR
+	# @TODO: SET RELATIVE ADDRESSING
 	jal		main
 $L1:
 	j		$L1
 
 #########################
 
-.org 0x3c # ISR address. Is this valid?
 interrupt_service_routine_entry:  
 	j		interrupt_service_routine
 
-.org 0x44 # ECALL address? Is this valid?
 system_service_routine_entry:  
 	j		system_service_routine
 
@@ -30,13 +30,14 @@ interrupt_service_routine:
 
 	# REGISTERS $26 AND $27 ARE RESERVED FOR THE OS in Plasma Core
 	# They are the registers k0 and k1 (Reserved for interrupt handler)
-	# RISC-V to-do: s10 s11? or maybe look priviledged ISA manual?
+	# RISC-V: CSR mscratch/sscratch
 	#la		$26,needTaskScheduling
 	#sw		$0,0($26)
 
 	# SAVE ra AND REGISTERS
-	la		s10,current		# Load address "current" to s10
-	lw		s10,0(s10)		# Load word from address s10+0 to s10
+	# @TODO: SAVE TO MSCRATCH/SSCRATCH
+	la		s10,current		# Load address "current" to
+	lw		s10,0(s10)		# Load word from address current+0
 
 	sw		ra,0(s10)		# reg[0] = ra
 	sw		sp,4(s10)		# reg[1] = sp
