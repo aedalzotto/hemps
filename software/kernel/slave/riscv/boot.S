@@ -18,6 +18,7 @@ boot_slave:
 	//@todo mtvec.mode = vectored
 	
 	# Configure addressing
+	// @todo
 
 	jal		main
 $L1:
@@ -41,45 +42,54 @@ interrupts_entry:				# Interrupts
 	j		interrupt_handler	# MEI
 
 interrupt_handler:
-	# scratch CSRs are reserved to OS
+	# All interrupts are handled by this function when
+	# mtvec.MODE == VECTORED
+
+	# mscratch CSR is reserved to OS
 	# Save t0 to mscratch to let kernel use it
 	csrw	mscratch,t0
 	lw		t0,current		# Load "current" to t0
 
 	# Save registers
-	sw		ra,0(t0)		# reg[0] = ra
-	sw		sp,4(t0)		# reg[1] = sp
-	sw		gp,8(t0)		# reg[2] = gp
-	sw		tp,12(t0)		# reg[3] = tp
-	# sw		t0,16(t0)		# reg[4] = t0
-	sw		t1,20(t0)		# reg[5] = t1
-	sw		t2,24(t0)		# reg[6] = t2
-	sw		s0,28(t0)		# reg[7] = s0
-	sw		s1,32(t0)		# reg[8] = s1
-	sw		a0,36(t0)		# reg[9] = a0
-	sw		a1,40(t0)		# reg[10] = a1
-	sw		a2,44(t0)		# reg[11] = a2
-	sw		a3,48(t0)		# reg[12] = a3
-	sw		a4,52(t0)		# reg[13] = a4
-	sw		a5,56(t0)		# reg[14] = a5
-	sw		a6,60(t0)		# reg[15] = a6
-	sw		a7,64(t0)		# reg[16] = a7
-	sw		s2,68(t0)		# reg[17] = s2
-	sw		s3,72(t0)		# reg[18] = s3
-	sw		s4,76(t0)		# reg[19] = s4
-	sw		s5,80(t0)		# reg[20] = s5
-	sw		s6,84(t0)		# reg[21] = s6
-	sw		s7,88(t0)		# reg[22] = s7
-	sw		s8,92(t0)		# reg[23] = s8
-	sw		s9,96(t0)		# reg[24] = s9
-    sw		s10,100(t0)	# reg[25] = s10
-	sw		s11,104(t0)	# reg[26] = s11
-	sw		t3,108(t0)		# reg[27] = t3
-	sw		t4,112(t0)		# reg[28] = t4
-	sw		t5,116(t0)		# reg[29] = t5
-	sw		t6,120(t0)		# reg[30] = t6
+	# sw		zeros,0(t0)
+	sw		ra,4(t0)
+	sw		sp,8(t0)
+	sw		gp,12(t0)
+	sw		tp,16(t0)
+	# sw		t0,20(t0)
+	sw		t1,24(t0)
+	sw		t2,28(t0)
+	sw		s0,32(t0)
+	sw		s1,36(t0)
+	sw		a0,40(t0)
+	sw		a1,44(t0)
+	sw		a2,48(t0)
+	sw		a3,52(t0)
+	sw		a4,56(t0)
+	sw		a5,60(t0)
+	sw		a6,64(t0)
+	sw		a7,68(t0)
+	sw		s2,72(t0)
+	sw		s3,76(t0)
+	sw		s4,80(t0)
+	sw		s5,84(t0)
+	sw		s6,88(t0)
+	sw		s7,92(t0)
+	sw		s8,96(t0)
+    sw		s9,100(t0)
+	sw		s10,104(t0)
+	sw		s11,108(t0)
+	sw		t3,112(t0)
+	sw		t4,116(t0)
+	sw		t5,120(t0)
+	sw		t6,124(t0)
+
+	csrr	t1,mscratch	# Load t0 to t1 now that t1 has been saved
+	sw		t1,20(t0)	# Save t0 that is loaded into t1 to its reg address
 	
-	li		sp,sp_addr
+	li		sp,sp_addr	# Restore stack pointer to top
+
+	// @todo Change kernel_slave, task_control and task_migration to use mepc instead of TCB.pc
 
 	#JUMP TO INTERRUPT SERVICE ROUTINE
 	lui		a1,0x2000
@@ -91,19 +101,26 @@ interrupt_handler:
 ####################################################
 
 exception_handler:
-	# registers $26 and $27 are reserved for kernel (in Plasma)
-	# RISC-V to-do: s10 s11? or maybe look priviledged ISA manual?
-	la		s10,current		# Load address "current" to s10
-	lw		s10,0(s10)		# Load word from address s10+0 to s10
+	# ALL synchronous exceptions are heandled by this function, not only ecall.
+
+	# Save t0 to mscratch to let kernel use it
+	csrw	mscratch,t0
+
+	csrr	t0,mcause			# Load exception cause to t0
+	andi	t0,t0,0xFFFFFFF7	# Clear bit 3
+	beqz	t0,ecall_routine	# If cause is ecall, jump to routine
+
+	csrr	t0,mscratch			# Else load back t0 and return to program
+	mret						# IMPORTANT: it does not handles exceptions
+ecall_routine:
+	lw		t0,current		# Load current to t0
         
 	# saves minimum context
-	sw		ra,0(s10)		# reg[0] = ra
-	sw		sp,4(s10)		# reg[1] = sp
-	#sw		gp,8(s10)
-	sw		a0,36(s10)		# $a0
-	sw		a1,40(s10)		# $a1
-	sw		a2,44(s10)		# $a2
-	sw		a3,48(s10)      # $a3
+	sw		a0,40(s10)		# $a0
+	sw		a1,44(s10)		# $a1
+	sw		a2,48(s10)		# $a2
+	sw		a3,52(s10)      # $a3
+
 	sw		a4,52(s10)
 	sw		a5,56(s10)
 	sw		a6,60(s10)
