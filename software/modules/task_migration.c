@@ -76,7 +76,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 
 	tcb_aux->proc_to_migrate = -1;
 
-	_stack_pointer = tcb_aux->reg[sp]; //plus one because the stack is initialized PAGE_SIZE - 1
+	_stack_pointer = tcb_aux->reg[REG_SP]; //plus one because the stack is initialized PAGE_SIZE - 1
 
 #if TASK_MIGRATION_DEBUG
 	putsv("\tstack pointer antes: ", _stack_pointer);
@@ -91,7 +91,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 
 	stack_lenght = (PAGE_SIZE - _stack_pointer) / 4;
 
-	_stack_pointer = tcb_aux->reg[sp];
+	_stack_pointer = tcb_aux->reg[REG_SP];
 
 #if TASK_MIGRATION_DEBUG
 	putsv("\tstack lenght: ", stack_lenght);
@@ -119,7 +119,7 @@ void migrate_dynamic_memory(TCB * tcb_aux){
 	p->program_counter = tcb_aux->pc - tcb_aux->offset;
 
 	for (int i=0; i<32; i++){
-		if (i == ra)
+		if (i == REG_RA)
 			tcb_registers[i] = tcb_aux->reg[i] - tcb_aux->offset;
 		else
 			tcb_registers[i] = tcb_aux->reg[i];
@@ -310,7 +310,7 @@ void handle_migration_TCB(volatile ServiceHeader * p, TCB * migrate_tcb){
 	DMNI_read_data((unsigned int) &tcb_registers, 32);
 
 	for (int i=0; i<30; i++){
-		if (i == ra)
+		if (i == REG_RA)
 			migrate_tcb->reg[i] = tcb_registers[i] + migrate_tcb->offset;
 		else
 			migrate_tcb->reg[i] = tcb_registers[i];
@@ -423,7 +423,7 @@ void handle_migration_request_msg(volatile ServiceHeader * p, TCB * migrate_tcb)
 void handle_migration_stack(volatile ServiceHeader * p, TCB * migrate_tcb){
 
 	if (p->stack_size > 0){
-		DMNI_read_data(migrate_tcb->offset + migrate_tcb->reg[sp], p->stack_size);
+		DMNI_read_data(migrate_tcb->offset + migrate_tcb->reg[REG_SP], p->stack_size);
 	}
 
 #if TASK_MIGRATION_DEBUG
