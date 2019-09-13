@@ -16,6 +16,8 @@
 SC_MODULE_EXPORT(RiscV);
 #endif
 
+const uint8_t RiscV::PAGE_SHIFT = (unsigned char)(log10(PAGE_SIZE_BYTES)/log10(2));
+
 RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) : 
 				sc_module(name_), router_addr(router_addr_),
 				mvendorid(0), marchid(0), mimpid(0), mhartid(0)
@@ -207,22 +209,19 @@ bool RiscV::fetch()
 bool RiscV::paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code)
 {
 	if(priv.get() == Privilege::Level::MACHINE ||	// M-Mode is bare mode
-		(satp.MODE() == Satp::MODES::BARE && srar.MODE() == Srar::MODES::SATP)){
+		(satp.MODE() == Satp::MODES::BARE && mrar.MODE() == Mrar::MODES::SATP)){
 		dst_addr.write(src_addr.read());
 		return false;
-	} else if(srar.MODE() == Srar::MODES::OFFSET){		
+	} else if(mrar.MODE() == Mrar::MODES::OFFSET){		
 		if(priv.get() == Privilege::Level::SUPERVISOR){ // Kernel is page 0
 			// @todo Inform externally of current page ??
 			current_page.write(0);
 			dst_addr.write(src_addr.read());
 			return false;
 		} else { // U-Mode with offset
-			current_page.write(srar.PN());
+			current_page.write(mrar.read()>>PAGE_SHIFT);
 			sc_uint<XLEN> offset;
-			offset.range(28,3) = srar.PS_28_3();
-			offset *= srar.PN();
-
-			dst_addr.write(src_addr.read() | offset);
+			dst_addr.write(src_addr.read() | mrar.read());
 			return false;
 		}
 	} else { // Sv32
@@ -1961,6 +1960,9 @@ bool RiscV::csr_helper(uint16_t addr, bool rw, Register *csr, uint32_t &wmask_an
 		break;
 	case CSR::Address::SATP:
 		csr = &satp;
+		break;
+	case CSR::Address::MRAR:
+		csr = &mrar;
 		break;
 	default:	// Unknown CSR
 		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);

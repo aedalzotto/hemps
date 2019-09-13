@@ -14,11 +14,12 @@ boot_slave:
 	li		sp,sp_addr
 
 	# Configure Syscall
-	//@todo mtvec.base = exceptions entry
-	//@todo mtvec.mode = direct
-	
+	la		t0,vector_entry		# Load the vector_entry address to t0
+	csrw	mtvec,t0			# Write vector_entry address to mtvec
+								# Last bit is 0, means DIRECT mode
+
 	# Configure addressing
-	// @todo
+	csrw	0x7C0,zero			# Clear offset addressing
 
 	jal		main
 $L1:
@@ -26,7 +27,7 @@ $L1:
 
 #########################
 
-exceptions_entry:				# Set to mtvec.BASE and DIRECT
+vector_entry:				# Set to mtvec.BASE and DIRECT
 	j		save_ctx
 
 interrupt_handler:
@@ -114,7 +115,7 @@ save_ctx:
 	csrr	t1,mepc		# Load mepc
 	sw		t1,128(t0)	# Save mepc
 
-	#csrr	t2,mrar		// @todo: How to load custom CSR?
+	csrr	t2,0x7C0	# MRAR
 	sw		t2,132(t0)	# Save mrar
 
 	csrr	t3,mscratch	# Load t0 to t3 now that t3 has been saved
@@ -134,13 +135,19 @@ save_ctx:
 ASM_RunScheduledTask:
 	# a0 has the TCB pointer
 
+	lw		t0,128(a0)	# mepc
+	csrw	mepc,t0		# Restore mepc
+
+	lw		t1,132(a0)	# offset
+	csrw	0x7C0,t1	# Restore mrar
+
 	# Load registers
 	#lw		zero,0(a0)
 	lw		ra,4(a0)
 	lw		sp,8(a0)
 	lw		gp,12(a0)
 	lw		tp,16(a0)
-	#lw		t0,20(a0)
+	lw		t0,20(a0)
 	lw		t1,24(a0)
 	lw		t2,28(a0)
 	lw		s0,32(a0)
@@ -168,14 +175,6 @@ ASM_RunScheduledTask:
 	lw		t5,120(a0)
 	lw		t6,124(a0)
 
-	lw		t0,128(a0)	# mepc
-	csrw	mepc,t0
-
-	lw		t0,132(a0)	# mrar
-	#csrw	mrar,t0		// @todo: how to address a custom CSR?
-
-	# Loads t0
-	lw		t0,20(a0)
 	# Finally loads a0
 	lw		a0,40(a0)
 
@@ -185,7 +184,16 @@ ASM_RunScheduledTask:
 
 .globl  ASM_SetInterruptEnable        
 ASM_SetInterruptEnable:
-	#mv		t6, a0
-	#mfc0	a0,$12
-	#mtc0	t6,$12          # TODO: enable interrupts
-	jr		ra
+	# Interrupts can't be disabled globally for lower privilege modes
+	# But the only interrupt that will occur in HeMPS is MEI
+	# We can mask MEI while in M-Mode and it will not trigger U-Mode
+
+	# a0 has value for enable/disable
+
+	slli	t0,a0,11		# t0 = Enable << 11 (MEI)
+	beqz	a0,disable_mei	# If !enable, clear MEI
+	csrs	mie,t1			# Else, set MEI
+	ret
+disable_mei:
+	csrc	mie,t0		# Clear MEI if enable
+	ret

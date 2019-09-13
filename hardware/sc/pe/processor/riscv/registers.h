@@ -13,6 +13,7 @@
 #pragma once
 
 #include <systemc.h>
+#include <cmath>
 
 static const uint32_t XLEN = 32;
 typedef sc_uint<XLEN> register_t;
@@ -479,8 +480,6 @@ namespace CSR
 
 		SATP	 = 0x180,
 
-		SRAR = 0x5C0,
-
 		/* Machine CSRs */
 		MVENDORID = 0xF11,
 		MARCHID,
@@ -498,17 +497,18 @@ namespace CSR
 		MEPC,
 		MCAUSE,
 		MTVAL,
-		MIP
+		MIP,
+
+		MRAR = 0x7C0
 	};
 };
 
-class Srar : public Register {
+class Mrar : public Register {
 public:
 	enum MODES {
-		SATP,
-		OFFSET
+		OFFSET,
+		SATP
 	};
-	sc_dt::sc_uint_subref PS_28_3() { return reg.range(31, 6); }
-	sc_dt::sc_uint_bitref MODE() { return reg.bit(5); }
-	sc_dt::sc_uint_subref PN() { return reg.range(4, 0); }
+
+	sc_dt::sc_uint_bitref MODE() { return reg.bit(0); }
 };

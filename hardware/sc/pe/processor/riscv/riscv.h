@@ -100,6 +100,7 @@ public:
 	RiscV(sc_module_name name_, half_flit_t router_addr_ = 0);
 
 private:
+	static const uint8_t PAGE_SHIFT;
 	//@todo Global inst register?
 
 	/* GPRs "X" registers */
@@ -192,7 +193,7 @@ private:
 	Register stval;
 	//sip
 	Satp satp;
-	Srar srar;
+	Mrar mrar;
 
 	/* PE router address. Used by the simulator */
 	half_flit_t router_addr;
