@@ -125,7 +125,7 @@ save_ctx:
 
 	csrr	t4,mcause			# Load mcause to t4
 	li 		t5,0x80000000		# Bit 31
-	andi	t6,t4,t5			# Check bit 31 (interrupt)
+	and		t6,t4,t5			# Check bit 31 (interrupt)
 	beqz	t6,exception_handler	# If 0 (exception) continue to ecall
 	j 		interrupt_handler		# Else (interrupt) continue to isr
 

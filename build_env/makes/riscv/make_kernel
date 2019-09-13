@@ -13,13 +13,13 @@ DUMP				= riscv-sifive-elf-objdump
 COPY				= riscv-sifive-elf-objcopy -O binary
 
 BOOT_MASTER       = boot_master
-BOOT_MASTER_SRC   = kernel/master/rv32i/boot.S
+BOOT_MASTER_SRC   = kernel/master/riscv/boot.S
 KERNEL_MASTER 	  = kernel_master
 KERNEL_MASTER_SRC = kernel/master/kernel_master.c
 KERNEL_MASTER_H	  = kernel/master/kernel_master.h
 
 BOOT_SLAVE        = boot_slave
-BOOT_SLAVE_SRC	  = kernel/slave/rv32i/boot.S
+BOOT_SLAVE_SRC	  = kernel/slave/riscv/boot.S
 KERNEL_SLAVE 	  = kernel_slave
 KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c
 KERNEL_MASTER_H	  = kernel/slave/kernel_slave.h

@@ -10,7 +10,7 @@ LD		          = riscv-sifive-elf-ld
 DUMP	          = riscv-sifive-elf-objdump
 COPY	          = riscv-sifive-elf-objcopy -O binary
 BOOT_TASK         = boot_task
-BOOT_TASK_SRC     = ../../software/boot_task/rv32i/boot_task.asm
+BOOT_TASK_SRC     = ../../software/boot_task/riscv/boot_task.asm
 
 TASK_SRC = $(wildcard *.c)
 TASK_OBJ = $(TASK_SRC:.c=.o)

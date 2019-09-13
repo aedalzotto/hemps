@@ -4,8 +4,11 @@
 
 #include <systemc.h>
 #include "../standards.h"
-#include "processor/plasma/mlite_cpu.h"
-// #include "processor/riscv/riscv.h"
+#ifdef MIPS_SIM
+	#include "processor/plasma/mlite_cpu.h"
+#elif defined(RISCV_SIM)
+	#include "processor/riscv/riscv.h"
+#endif
 #include "dmni/dmni.h"
 #include "router/router_cc.h"
 #include "memory/ram.h"
@@ -110,8 +113,11 @@ SC_MODULE(pe) {
 
 	unsigned char shift_mem_page;
 
+#ifdef MIPS_SIM
 	mlite_cpu	*	cpu;
-	// RiscV		*	cpu;
+#elif defined(RISCV_SIM)
+	RiscV		*	cpu;
+#endif
 	ram			* 	mem;
 	dmni 		*	dm_ni;
 	router_cc 	*	router;
@@ -153,9 +159,11 @@ SC_MODULE(pe) {
 		end_sim_reg.write(0x00000001);
 
 		shift_mem_page = (unsigned char) (log10(PAGE_SIZE_BYTES)/log10(2));
-	
+	#ifdef MIPS_SIM
 		cpu = new mlite_cpu("cpu", router_address);
-		// cpu = new RiscV("cpu", router_address);
+	#elif defined(RISCV_SIM)
+		cpu = new RiscV("cpu", router_address);
+	#endif
 		cpu->clk(clock_hold);
 		cpu->reset_in(reset);
 		cpu->intr_in(irq);

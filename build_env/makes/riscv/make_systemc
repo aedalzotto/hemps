@@ -3,7 +3,7 @@ NC   =\033[0m # No Color
 
 #systemc g++ compiler
 CXX = g++
-CXXFLAGS = -g -Wall -O2
+CXXFLAGS = -g -Wall -O2 -DRISCV_SIM
 
 HEMPS_TGT=$(notdir $(patsubst %/,%,$(dir $(CURDIR))))
 
@@ -13,14 +13,14 @@ TOP 		=hemps test_bench
 PE	 		=pe
 DMNI 		=dmni
 MEMORY 		=ram
-PROCESSOR 	=rv32i
+PROCESSOR 	=riscv
 ROUTER	 	=queue switchcontrol router_cc
 
 TOP_SRC	    	= $(addprefix sc/, 						$(TOP:=.cpp)  $(TOP:=.h) 			)
 PE_SRC			= $(addprefix sc/pe/, 					$(PE:=.cpp) $(PE:=.h)  				)
 DMNI_SRC		= $(addprefix sc/pe/dmni/, 				$(DMNI:=.cpp) $(DMNI:=.h)			)
 MEMORY_SRC		= $(addprefix sc/pe/memory/,			$(MEMORY:=.cpp) $(MEMORY:=.h)		) 
-PROCESSOR_SRC	= $(addprefix sc/pe/processor/rv32i/, 	$(PROCESSOR:=.cpp) $(PROCESSOR:=.h)	)
+PROCESSOR_SRC	= $(addprefix sc/pe/processor/riscv/, 	$(PROCESSOR:=.cpp) $(PROCESSOR:=.h)	)
 ROUTER_SRC		= $(addprefix sc/pe/router/, 			$(ROUTER:=.cpp) $(ROUTER:=.h)		)
 ##############################################################################################
 TOP_TGT 		=$(TOP:=.o)

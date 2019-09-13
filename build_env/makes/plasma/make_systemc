@@ -3,7 +3,7 @@ NC   =\033[0m # No Color
 
 
 #systemc g++ compiler
-SC_C = g++ -c -g -Wall -O2 -fpermissive -Wno-write-strings $(CFLAGS)
+SC_C = g++ -c -g -Wall -O2 -fpermissive -Wno-write-strings $(CFLAGS) -DMIPS_SIM
 #HEMPS_TGT=$(HEMPS_TGT)
 HEMPS_TGT=$(notdir $(patsubst %/,%,$(dir $(CURDIR))))
 

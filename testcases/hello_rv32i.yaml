@@ -7,7 +7,7 @@ hw:
   mpsoc_dimension: [2,2]    # Minimal: [2,2], must be square
   cluster_dimension: [2,2]  # Must be square, less or equal to mpsoc_dimension
   master_location: LB       # Must be LB
-  processor_arch: rv32i     # plasma (MIPS I-like) | rv32i (RISC-V)
+  processor_arch: riscv     # plasma (MIPS I-like) | rv32i (RISC-V)
 
 apps: 
   - name: hello_world_app
