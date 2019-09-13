@@ -15,7 +15,7 @@ boot_slave:
 
 	# Configure Syscall
 	//@todo mtvec.base = exceptions entry
-	//@todo mtvec.mode = vectored
+	//@todo mtvec.mode = direct
 	
 	# Configure addressing
 	// @todo
@@ -26,28 +26,12 @@ $L1:
 
 #########################
 
-exceptions_entry:				# Set to mtvec.BASE and VECTORED
-	j		exception_handler	# Exceptions (inc. ecall)
-interrupts_entry:				# Interrupts
-	j		interrupt_handler	# SSI
-	nop
-	j		interrupt_handler	# MSI
-	nop
-	j		interrupt_handler	# STI
-	nop
-	j		interrupt_handler	# MTI
-	nop
-	j		interrupt_handler	# SEI
-	nop
-	j		interrupt_handler	# MEI
+exceptions_entry:				# Set to mtvec.BASE and DIRECT
+	j		save_ctx
 
 interrupt_handler:
-	# All interrupts are handled by this function when
-	# mtvec.MODE == VECTORED
+	# All interrupts are handled by this function
 
-	# Save context to memory
-	j		save_ctx	# This function returns to isr_routine
-isr_routine:
 	#JUMP TO INTERRUPT SERVICE ROUTINE WITH ARG
 	li		t0,0x20000000	# HW Address base
 	lw		t1,0x20(t0)     # IRQ_STATUS
@@ -71,8 +55,6 @@ exception_handler:
 	# csrr	t0,mscratch			# Else load back t0 and return to program
 	# mret						# IMPORTANT: it does not handles exceptions
 # is_call:
-	j 		save_ctx		# Saves context and returns to ecall_routine
-ecall_routine:
 	# jumps to system calls handler
 	jal		Syscall
 
@@ -143,8 +125,8 @@ save_ctx:
 	csrr	t4,mcause			# Load mcause to t4
 	li 		t5,0x80000000		# Bit 31
 	andi	t6,t4,t5			# Check bit 31 (interrupt)
-	beqz	t6,ecall_routine	# If 0 (exception) continue to ecall
-	j 		isr_routine			# Else (interrupt) continue to isr
+	beqz	t6,exception_handler	# If 0 (exception) continue to ecall
+	j 		interrupt_handler		# Else (interrupt) continue to isr
 
 ###################################################
 
