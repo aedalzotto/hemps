@@ -414,6 +414,9 @@ bool RiscV::decode()
 	case (uint32_t)Instructions::OPCODES::SYSTEM:
 		return decode_system();
 		break;
+	default:
+		handle_exceptions(Exceptions::CODE::ILLEGAL_INSTRUCTION);
+		return true;
 	}
 	return false;
 }
