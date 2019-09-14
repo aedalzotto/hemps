@@ -16,7 +16,7 @@
 #include <cmath>
 
 static const uint32_t XLEN = 32;
-typedef sc_uint<XLEN> register_t;
+typedef sc_uint<XLEN> xlenreg_t;
 
 class Privilege {
 public:
@@ -36,13 +36,13 @@ public:
 
 class Register {
 protected:
-	register_t reg;
+	xlenreg_t reg;
 public:
-	Register();
-	Register(register_t reg_) : reg(reg_) { }
+	Register() { reg = 0; }
+	Register(xlenreg_t reg_) : reg(reg_) { }
 	Register(const Register &Reg) : reg(Reg.reg) { }
-	void write(register_t value) { reg = value; }
-	register_t read() { return reg; }
+	void write(xlenreg_t value) { reg = value; }
+	xlenreg_t read() { return reg; }
 	sc_dt::sc_uint_subref range(int l, int r) { return reg.range(l, r); }
 	sc_dt::sc_uint_bitref bit(int b) { return reg.bit(b); }
 };
@@ -99,7 +99,7 @@ namespace ISA {
 };
 
 namespace Instructions {
-	enum OPCODES {
+	enum class OPCODES {
 		OP_IMM   = 0b0010011,
 		LUI      = 0b0110111,
 		AUIPC    = 0b0010111,
@@ -112,7 +112,7 @@ namespace Instructions {
 		MISC_MEM = 0b0001111,
 		SYSTEM   = 0b1110011
 	};
-	enum FUNCT3 {
+	enum class FUNCT3 {
 		// OP-IMM
 		ADDI  = 0b000,
 		SLTI  = 0b010,
@@ -178,7 +178,7 @@ namespace Instructions {
 		CSRRSI = 0b110,
 		CSRRCI = 0b111
 	};
-	enum FUNCT7 {
+	enum class FUNCT7 {
 		// OP-IMM
 		SLLI = 0b0000000,
 		SRLI = 0b0000000,
@@ -197,17 +197,17 @@ namespace Instructions {
 		MRET		 = 0b0011000,
 		SFENCE_VMA	 = 0b0001001
 	};
-	enum RS2 {
+	enum class RS2 {
 		// SYSTEM
 		ECALL  = 0b00000,
 		EBREAK = 0b00001,
 		RET	   = 0b00010,
 		WFI    = 0b00101
 	};
-	enum RS1 {
+	enum class RS1 {
 		SYSTEM = 0b00000
 	};
-	enum RD {
+	enum class RD {
 		SYSTEM = 0b00000
 	};
 };
@@ -216,8 +216,8 @@ class Mstatus : public Register {
 private:
 	static const uint32_t MASK = 0x807FF9BB;
 public:
-	void write(register_t value) { reg = (value & MASK);  }
-	register_t read() { return (reg & MASK); }
+	void write(xlenreg_t value) { reg = (value & MASK);  }
+	xlenreg_t read() { return (reg & MASK); }
 
 	sc_dt::sc_uint_bitref SD() { return reg.bit(31); }
 	sc_dt::sc_uint_bitref TSR() { return reg.bit(22); }
@@ -247,7 +247,7 @@ public:
 };
 
 namespace Interrupts {
-	enum CODE {
+	enum class CODE {
 		USI,
 		SSI,
 		MSI = 3,
@@ -260,31 +260,31 @@ namespace Interrupts {
 		SEI,
 		MEI = 11
 	};
-	enum BIT {
-		USI = 1 << CODE::USI,
-		SSI = 1 << CODE::SSI,
-		MSI = 1 << CODE::MSI,
+	enum class BIT {
+		USI = 1 << (uint32_t)CODE::USI,
+		SSI = 1 << (uint32_t)CODE::SSI,
+		MSI = 1 << (uint32_t)CODE::MSI,
 
-		UTI = 1 << CODE::UTI,
-		STI = 1 << CODE::STI,
-		MTI = 1 << CODE::MTI,
+		UTI = 1 << (uint32_t)CODE::UTI,
+		STI = 1 << (uint32_t)CODE::STI,
+		MTI = 1 << (uint32_t)CODE::MTI,
 
-		UEI = 1 << CODE::UEI,
-		SEI = 1 << CODE::SEI,
-		MEI = 1 << CODE::MEI
+		UEI = 1 << (uint32_t)CODE::UEI,
+		SEI = 1 << (uint32_t)CODE::SEI,
+		MEI = 1 << (uint32_t)CODE::MEI
 	};
-	enum MODE {
-		USER = BIT::USI | BIT::UTI | BIT::UEI,
-		SUPERVISOR = BIT::SSI | BIT::STI | BIT::SEI,
-		MACHINE = BIT::MSI | BIT::MTI | BIT::MEI
+	enum class MODE {
+		USER = (uint32_t)BIT::USI | (uint32_t)BIT::UTI | (uint32_t)BIT::UEI,
+		SUPERVISOR = (uint32_t)BIT::SSI | (uint32_t)BIT::STI | (uint32_t)BIT::SEI,
+		MACHINE = (uint32_t)BIT::MSI | (uint32_t)BIT::MTI | (uint32_t)BIT::MEI
 	};
 
 	class Mir : public Register {
 	private:
 		static const uint32_t MASK = 0xAAA;
 	public:
-		void write(register_t value) { reg = (value & MASK);  }
-		register_t read() { return (reg & MASK); }
+		void write(xlenreg_t value) { reg = (value & MASK);  }
+		xlenreg_t read() { return (reg & MASK); }
 
 		sc_dt::sc_uint_bitref MEI() { return reg.bit(11); }
 		sc_dt::sc_uint_bitref SEI() { return reg.bit(9); }
@@ -319,28 +319,28 @@ namespace Exceptions {
 		MAX
 	};
 	enum BIT {
-		IAM = 1 << CODE::INSTRUCTION_ADDRESS_MISALIGNED,
-		IAF = 1 << CODE::INSTRUCTION_ACCESS_FAULT,
-		II  = 1 << CODE::ILLEGAL_INSTRUCTION,
-		BP  = 1 << CODE::BREAKPOINT,
-		LAM = 1 << CODE::LOAD_ADDRESS_MISALIGNED,
-		LAF = 1 << CODE::LOAD_ACCESS_FAULT,
-		SAM = 1 << CODE::STORE_AMO_ADDRESS_MISALIGNED,
-		SAF = 1 << CODE::STORE_AMO_ACCESS_FAULT,
-		ECU = 1 << CODE::ECALL_FROM_UMODE,
-		ECS = 1 << CODE::ECALL_FROM_SMODE,
-		ECM = 1 << CODE::ECALL_FROM_MMODE,
-		IPF = 1 << CODE::INSTRUCTION_PAGE_FAULT,
-		LPF = 1 << CODE::LOAD_PAGE_FAULT,
-		SPF = 1 << CODE::STORE_AMO_PAGE_FAULT
+		IAM = 1 << (uint32_t)CODE::INSTRUCTION_ADDRESS_MISALIGNED,
+		IAF = 1 << (uint32_t)CODE::INSTRUCTION_ACCESS_FAULT,
+		II  = 1 << (uint32_t)CODE::ILLEGAL_INSTRUCTION,
+		BP  = 1 << (uint32_t)CODE::BREAKPOINT,
+		LAM = 1 << (uint32_t)CODE::LOAD_ADDRESS_MISALIGNED,
+		LAF = 1 << (uint32_t)CODE::LOAD_ACCESS_FAULT,
+		SAM = 1 << (uint32_t)CODE::STORE_AMO_ADDRESS_MISALIGNED,
+		SAF = 1 << (uint32_t)CODE::STORE_AMO_ACCESS_FAULT,
+		ECU = 1 << (uint32_t)CODE::ECALL_FROM_UMODE,
+		ECS = 1 << (uint32_t)CODE::ECALL_FROM_SMODE,
+		ECM = 1 << (uint32_t)CODE::ECALL_FROM_MMODE,
+		IPF = 1 << (uint32_t)CODE::INSTRUCTION_PAGE_FAULT,
+		LPF = 1 << (uint32_t)CODE::LOAD_PAGE_FAULT,
+		SPF = 1 << (uint32_t)CODE::STORE_AMO_PAGE_FAULT
 	};
 
 	class Mer : public Register {
 	private:
 		static const uint32_t MASK = 0xBFFF;
 	public:
-		void write(register_t value) { reg = (value & MASK);  }
-		register_t read() { return (reg & MASK); }
+		void write(xlenreg_t value) { reg = (value & MASK);  }
+		xlenreg_t read() { return (reg & MASK); }
 
 		sc_dt::sc_uint_bitref SPF() { return reg.bit(14); }
 		sc_dt::sc_uint_bitref LPF() { return reg.bit(13); }

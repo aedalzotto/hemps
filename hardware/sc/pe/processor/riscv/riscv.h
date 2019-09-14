@@ -13,6 +13,7 @@
 
 #include <systemc.h>
 #include <stdint.h>
+#include "../../../standards.h"
 
 /* Length of a flit */
 static const int FLIT_SIZE = 32;
@@ -101,6 +102,10 @@ public:
 
 private:
 	static const uint8_t PAGE_SHIFT;
+
+	/* PE router address. Used by the simulator */
+	half_flit_t router_addr;
+
 	//@todo Global inst register?
 
 	/* GPRs "X" registers */
@@ -195,9 +200,6 @@ private:
 	Satp satp;
 	Mrar mrar;
 
-	/* PE router address. Used by the simulator */
-	half_flit_t router_addr;
-
 	/**
 	 * @brief Resets the CPU to its initial state.
 	 */
@@ -237,7 +239,7 @@ private:
 	 * 
 	 * @return XLEN bits from memory address.
 	 */
-	register_t mem_read(sc_uint<34> address);
+	xlenreg_t mem_read(sc_uint<34> address);
 
 	/**
 	 * @brief Writes XLEN to memory.
@@ -245,7 +247,7 @@ private:
 	 * @param address 	The memory address to be written.
 	 * @param value		The value to be written
 	 */
-	void mem_write(sc_uint<34> address, register_t value);
+	void mem_write(sc_uint<34> address, xlenreg_t value);
 
 	/**
 	 * @brief Handles synchronous exceptions
