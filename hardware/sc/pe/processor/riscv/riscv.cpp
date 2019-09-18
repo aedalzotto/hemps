@@ -1199,8 +1199,9 @@ bool RiscV::sb()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
-	r.range(11, 0) = instr.imm_11_0();
+	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(11, 5) = instr.imm_11_5();
+	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
 	// Store Byte must be 8-bit aligned
@@ -1234,8 +1235,9 @@ bool RiscV::sh()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
-	r.range(11, 0) = instr.imm_11_0();
+	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(11, 5) = instr.imm_11_5();
+	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
 	// Store Half must be 16-bit aligned
@@ -1269,8 +1271,9 @@ bool RiscV::sw()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
-	r.range(11, 0) = instr.imm_11_0();
+	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(11, 5) = instr.imm_11_5();
+	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
 	// Store Word must be 32-bit aligned
