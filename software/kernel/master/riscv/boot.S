@@ -6,10 +6,9 @@
 ## @brief Initializes the stack pointer and jumps to kernel master main
 ##
 
-.section .text
-.align  2
-.globl boot_master
-boot_master:
+.section .init
+.globl _start
+_start:
 	li		sp,sp_addr
 	jal		main
 $L1:

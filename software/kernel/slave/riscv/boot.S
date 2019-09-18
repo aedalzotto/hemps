@@ -6,11 +6,10 @@
 ## @brief Initializes the stack pointer and jumps to kernel_slave main
 ##
 
-.section .text
-.align 2
+.section .init
 
-.globl boot_slave
-boot_slave:
+.globl _start
+_start:
 	li		sp,sp_addr
 
 	# Configure Syscall
@@ -25,7 +24,7 @@ boot_slave:
 $L1:
 	j		$L1
 
-#########################
+.section .text
 
 vector_entry:				# Set to mtvec.BASE and DIRECT
 	j		save_ctx

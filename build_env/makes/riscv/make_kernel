@@ -52,21 +52,21 @@ $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KE
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	@$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
 	@$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
-	@$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	@$(LD) -Ttext 0 -eboot_master -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	@$(DUMP) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
-	@$(COPY) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
-	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	@$(DUMP) -S $(KERNEL_MASTER)_debug.elf > $(KERNEL_MASTER).lst
+	@$(COPY) $(KERNEL_MASTER).elf $(KERNEL_MASTER).bin
+	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_MASTER).bin > $(KERNEL_MASTER).txt
 
 $(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC)
 	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	@$(AS) $(BOOT_SLAVE_SRC) -o $(BOOT_SLAVE).o --defsym sp_addr=$(PAGE_SP_INIT)
 	@$(GCC) -c $(KERNEL_SLAVE_SRC) -o $(KERNEL_SLAVE).o $(CFLAGS)
-	@$(LD) -Ttext 0 -eboot_slave -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
-	@$(LD) -Ttext 0 -eboot_slave -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
-	@$(DUMP) -S $(KERNEL_SLAVE)_debug.bin > $(KERNEL_SLAVE).lst
-	@$(COPY) $(KERNEL_SLAVE).bin $(KERNEL_SLAVE).dump
-	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_SLAVE).dump > $(KERNEL_SLAVE).txt
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
+	@$(DUMP) -S $(KERNEL_SLAVE)_debug.elf > $(KERNEL_SLAVE).lst
+	@$(COPY) $(KERNEL_SLAVE).elf $(KERNEL_SLAVE).bin
+	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_SLAVE).bin > $(KERNEL_SLAVE).txt
 
 clean:
 	@printf "Cleaning up\n"
