@@ -837,5 +837,5 @@ private:
 	 * 
 	 * @return True if invalid CSR of permission, raising exception.
 	 */
-	bool csr_helper(uint16_t addr, bool rw, Register *csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask);
+	bool csr_helper(uint16_t addr, bool rw, Register* &csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask);
 };

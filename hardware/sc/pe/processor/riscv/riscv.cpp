@@ -1844,7 +1844,7 @@ bool RiscV::sfence_vma()
 	return false;
 }
 
-bool RiscV::csr_helper(uint16_t addr, bool rw, Register *csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask)
+bool RiscV::csr_helper(uint16_t addr, bool rw, Register* &csr, uint32_t &wmask_and, uint32_t &wmask_or, uint32_t &rmask)
 {
 	// Access CSR
 	csr 		= nullptr;
