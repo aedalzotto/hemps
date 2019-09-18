@@ -2,11 +2,10 @@
 ##
 ## @brief Initializes the stack pointer and jumps to main(). Handles the SystemCall() from C to syscall.
 
-.section .text		# Start of ".text" section (means code section)
-.align  2			# Aligns to 2^2 = 4 bytes
+.section .init		# Start of ".init" section (means bootloader)
 
-.globl boot_task  	# Exports entry symbol
-boot_task:
+.globl _start  	# Exports entry symbol
+_start:
 	li sp, sp_addr	# Stack pointer address passed on makefile. Loads the page size to the sp.
 
 	# JAL: Jump and Link
@@ -19,6 +18,8 @@ $L1:             	# Executes always that returns from syscall.
 	j $L1          	# infinite loop
   
 #####################
+
+.section .text
 
 .globl SystemCall	# "registers that a global SystemCall function exists to C code"
 SystemCall:
