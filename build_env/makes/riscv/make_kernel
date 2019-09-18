@@ -42,11 +42,11 @@ default: $(KERNEL_MASTER).txt $(KERNEL_SLAVE).txt
 
 $(KERNEL_PKG_TGT): $(KERNEL_PKG_SRC)
 	@printf "${RED}Compiling Kernel Package: %s ...${NC}\n" "$*.c"
-	$(GCC) -c $*.c -o $*.o $(CFLAGS)
+	@$(GCC) -c $*.c -o $*.o $(CFLAGS)
 
 $(MODULES_TGT): $(MODULES_SRC)
 	@printf "${RED}Compiling Kernel %s ...${NC}\n" "$*.c"
-	$(GCC) -c $*.c -o $*.o $(CFLAGS)
+	@$(GCC) -c $*.c -o $*.o $(CFLAGS)
 
 $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
