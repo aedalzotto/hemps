@@ -14,6 +14,7 @@ def main():
     testcase_name = sys.argv[1]
     
     yaml_r = get_yaml_reader(testcase_name)
+    processor_arch = get_processor_arch(yaml_r)
     
     generate_sw_pkg( yaml_r )
     
@@ -22,11 +23,17 @@ def main():
         
     if exit_status != 0:
         sys.exit("\nError compiling kernel source code\n");
+
+    tool_prefix="mips-elf-"
+    elf_ext=".bin"
+    if processor_arch == "riscv":
+        tool_prefix="riscv-sifive-elf-"
+        elf_ext=".elf"
         
     print "\n***************** kernel page size report ***********************"
-    check_mem_size("software/kernel_slave.bin", get_page_size_KB(yaml_r) )
+    check_mem_size("software/kernel_slave"+elf_ext, get_page_size_KB(yaml_r), tool_prefix )
     
-    check_mem_size("software/kernel_master.bin", get_memory_size_KB(yaml_r) )
+    check_mem_size("software/kernel_master"+elf_ext, get_memory_size_KB(yaml_r), tool_prefix )
         
     print "***************** end kernel page size report *********************\n"
     

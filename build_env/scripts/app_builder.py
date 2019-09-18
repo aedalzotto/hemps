@@ -19,6 +19,8 @@ def main():
     apps_name_list = get_apps_name_list(yaml_r)
     
     page_size_bytes = get_page_size_KB(yaml_r) * 1024
+
+    processor_arch = get_processor_arch(yaml_r)
     
     generate_apps_id(apps_name_list)
     
@@ -28,7 +30,7 @@ def main():
         sys.exit("\nError compiling applications' source code\n");
     
     #Generate the repository.txt and repository_debug.txt files, returning a list of tuple {app_name, repo_address}
-    apps_repo_addr_list = generate_repository(yaml_r, apps_name_list);
+    apps_repo_addr_list = generate_repository(yaml_r, apps_name_list, processor_arch);
     
     #Generates the appstart.txt and appstart_debug.txt files
     generate_appstart(apps_repo_addr_list, yaml_r)
@@ -82,109 +84,115 @@ def generate_appstart(apps_repo_addr_list, yaml_r):
 
 #Function that generates a new repository from the dir: /applications
 #Please, behold this following peace of art:     
-def generate_repository(yaml_r, apps_name_list):
+def generate_repository(yaml_r, apps_name_list, processor_arch):
     
     
-    TASK_DESCRIPTOR_SIZE = 26 #27 is number of lines to represent a task description 
-    MAX_DEPENDENCES = 10
+	TASK_DESCRIPTOR_SIZE = 26 #27 is number of lines to represent a task description 
+	MAX_DEPENDENCES = 10
 
-    #list(set(apps_name_list)) remove duplicates app name. Usefull to generate only one instance of the same app into repository
-    apps_name_list = list(set(apps_name_list))
+	#list(set(apps_name_list)) remove duplicates app name. Usefull to generate only one instance of the same app into repository
+	apps_name_list = list(set(apps_name_list))
 
-    #Returned list, containing a tuple {app_name, app_repo_address}
-    apps_repo_addr_list = []
+	#Returned list, containing a tuple {app_name, app_repo_address}
+	apps_repo_addr_list = []
     
-    #repolines is a list of RepoLine objetcts, the ideia is keep a list generic to be easily converted to any systax
-    repo_lines = []
+	#repolines is a list of RepoLine objetcts, the ideia is keep a list generic to be easily converted to any systax
+	repo_lines = []
     
-    #Used for point the next free address to fill with a given task code (task.txt file)
-    initial_address = 0 
-    
-    print "\n***************** task page size report ***********************"
+	#Used for point the next free address to fill with a given task code (task.txt file)
+	initial_address = 0 
+
+	elf_ext = ".bin"
+	tool_prefix = "mips-elf-"
+	if processor_arch == "riscv":
+		elf_ext = ".elf"
+		tool_prefix = "riscv-sifive-elf-"
+
+	print "\n***************** task page size report ***********************"
     
     #Walk for all apps into /applications dir
-    for app_name in apps_name_list:
+	for app_name in apps_name_list:
         
         #Stores the repository address of the application, this list is used to generate appstart
-        apps_repo_addr_list.append([app_name, toX(initial_address)])
+		apps_repo_addr_list.append([app_name, toX(initial_address)])
         
-        task_name_list = get_app_task_name_list(".", app_name)
+		task_name_list = get_app_task_name_list(".", app_name)
         
-        app_tasks_number = len(task_name_list)
+		app_tasks_number = len(task_name_list)
         
         #First line of app descriptor is the app task number
-        repo_lines.append( RepoLine(toX( app_tasks_number), "task number to application "+app_name+"" ) ) 
+		repo_lines.append( RepoLine(toX( app_tasks_number), "task number to application "+app_name+"" ) ) 
         
         #This variable point to the end of the application header descriptor, this address represent where the 
         #app tasks code can be inserted
-        initial_address = initial_address + ( (TASK_DESCRIPTOR_SIZE * app_tasks_number) * 4) + 4#plus 4 because the first word is the app task number
+		initial_address = initial_address + ( (TASK_DESCRIPTOR_SIZE * app_tasks_number) * 4) + 4#plus 4 because the first word is the app task number
         
-        task_id = 0
+		task_id = 0
         
         #Walk for all app tasks into /applications/app dir to fills the task headers
-        for task_name in task_name_list:
+		for task_name in task_name_list:
             
-            txt_size = get_task_txt_size(app_name, task_name)
+			txt_size = get_task_txt_size(app_name, task_name)
             
             #Points next_free_address to a next free repo space after considering the task code of <task_name>.txt
-            repo_lines.append( RepoLine(toX(task_id)                                    , task_name+".c") )
-            repo_lines.append( RepoLine(toX(txt_size)                                   , "txt size") )
-            repo_lines.append( RepoLine(toX(get_task_DATA_size(app_name, task_name))    , "data size") )
-            repo_lines.append( RepoLine(toX(get_task_BSS_size(app_name, task_name))     , "bss size") )
-            repo_lines.append( RepoLine(toX(initial_address)                            , "initial_address") )
+			repo_lines.append( RepoLine(toX(task_id)                                    , task_name+".c") )
+			repo_lines.append( RepoLine(toX(txt_size)                                   , "txt size") )
+			repo_lines.append( RepoLine(toX(get_task_DATA_size(app_name, task_name, elf_ext, tool_prefix))    , "data size") )
+			repo_lines.append( RepoLine(toX(get_task_BSS_size(app_name, task_name, elf_ext, tool_prefix))     , "bss size") )
+			repo_lines.append( RepoLine(toX(initial_address)                            , "initial_address") )
             
-            initial_address = initial_address + (txt_size * 4)
+			initial_address = initial_address + (txt_size * 4)
             
-            repo_lines.append( RepoLine(toX(get_task_comp_load(app_name, task_name)), "computational load") )
+			repo_lines.append( RepoLine(toX(get_task_comp_load(app_name, task_name)), "computational load") )
             
-            dependenc_list = get_task_dependence_list(app_name, task_name)
+			dependenc_list = get_task_dependence_list(app_name, task_name)
             
             #Fills the task dependences according with MAX_DEPENDENCES size
-            comment = "communication load {task id, comm load in flits}"
-            for i in range(0, MAX_DEPENDENCES):
+			comment = "communication load {task id, comm load in flits}"
+			for i in range(0, MAX_DEPENDENCES):
                 
-                if ((i+1) < len(dependenc_list)):
-                    repo_lines.append( RepoLine(toX(dependenc_list[i]), comment) )
-                    comment = ""
-                    repo_lines.append( RepoLine(toX(dependenc_list[i+1]), comment) )
-                else:
-                    repo_lines.append( RepoLine("ffffffff", comment) )
-                    comment = ""
-                    repo_lines.append( RepoLine("ffffffff", comment) )
+				if ((i+1) < len(dependenc_list)):
+					repo_lines.append( RepoLine(toX(dependenc_list[i]), comment) )
+					comment = ""
+					repo_lines.append( RepoLine(toX(dependenc_list[i+1]), comment) )
+				else:
+					repo_lines.append( RepoLine("ffffffff", comment) )
+					comment = ""
+					repo_lines.append( RepoLine("ffffffff", comment) )
                     
                     
-            task_id = task_id + 1
+			task_id = task_id + 1
             
         #After fills the task header, starts to insert the tasks code
-        for task_name in task_name_list:
+		for task_name in task_name_list:
             
-            txt_source_file = "applications/" + app_name + "/" + task_name + ".txt"
+			txt_source_file = "applications/" + app_name + "/" + task_name + ".txt"
             
-            bin_source_file = "applications/" + app_name + "/" + task_name + ".bin"
+			bin_source_file = "applications/" + app_name + "/" + task_name + elf_ext
             
-            check_mem_size(bin_source_file, get_page_size_KB(yaml_r) )
+			check_mem_size(bin_source_file, get_page_size_KB(yaml_r), tool_prefix)
             
-            comment = task_name+".c"
+			comment = task_name+".c"
             
-            task_txt_file = open(txt_source_file, "r")
+			task_txt_file = open(txt_source_file, "r")
             
-            for line in task_txt_file:
+			for line in task_txt_file:
 				file_line = line[0:len(line)-1] # removes the \n from end of file
 				repo_lines.append( RepoLine(file_line  , comment) )
 				comment = ""
                     
-            task_txt_file.close()
+			task_txt_file.close()
     
     ################Finally, generates the repository file (main and debug files) ##########################
-    print "***************** end task page size report *********************\n"
+	print "***************** end task page size report *********************\n"
 
-    generate_repository_file(repo_lines, get_model_description(yaml_r))
+	generate_repository_file(repo_lines, get_model_description(yaml_r))
 
-    print "\n***************** repository size report ***********************"
-    check_repo_size(get_repository_size_MB(yaml_r), "repository.txt")
-    print "***************** end repository size report ***********************\n"
+	print "\n***************** repository size report ***********************"
+	check_repo_size(get_repository_size_MB(yaml_r), "repository.txt")
+	print "***************** end repository size report ***********************\n"
     
-    return apps_repo_addr_list
+	return apps_repo_addr_list
     
 #Receives a int, convert to string and fills to a 32 bits word
 def toX(input):
@@ -251,26 +259,26 @@ def get_task_txt_size(app_name, task_name):
     
     return num_lines
     
-def get_task_DATA_size(app_name, task_name):
+def get_task_DATA_size(app_name, task_name, elf_ext, tool_prefix):
+
+	source_file = "applications/" + app_name + "/" + task_name + elf_ext
+
+	#https://www.quora.com/What-is-a-convenient-way-to-execute-a-shell-command-in-Python-and-retrieve-its-output
+	data_size = int (commands.getoutput(tool_prefix+"size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f2"))
     
-    source_file = "applications/" + app_name + "/" + task_name + ".bin"
-    
-    #https://www.quora.com/What-is-a-convenient-way-to-execute-a-shell-command-in-Python-and-retrieve-its-output
-    data_size = int (commands.getoutput("mips-elf-size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f2"))
-    
-    while data_size % 4 != 0:
-        data_size = data_size + 1
+	while data_size % 4 != 0:
+		data_size = data_size + 1
         
-    data_size = data_size / 4
+	data_size = data_size / 4
     
-    return data_size
+	return data_size
     
-def get_task_BSS_size(app_name, task_name):
+def get_task_BSS_size(app_name, task_name, elf_ext, tool_prefix):
     
-    source_file = "applications/" + app_name + "/" + task_name + ".bin"
+    source_file = "applications/" + app_name + "/" + task_name + elf_ext
     
     #https://www.quora.com/What-is-a-convenient-way-to-execute-a-shell-command-in-Python-and-retrieve-its-output
-    bss_size = int(commands.getoutput("mips-elf-size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f3"))
+    bss_size = int(commands.getoutput(tool_prefix+"size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f3"))
     
     while bss_size % 4 != 0:
         bss_size = bss_size + 1

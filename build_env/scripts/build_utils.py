@@ -99,9 +99,9 @@ def writes_file_into_testcase(file_path, file_lines):
 
 #Check the page size, comparing the (code size + 50%) of the file_path
 #with the page_size. 
-def check_mem_size(file_path, mem_size_KB):
+def check_mem_size(file_path, mem_size_KB, tool_prefix):
     
-    program_memory_size = int (commands.getoutput("mips-elf-size "+file_path+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f4"))
+    program_memory_size = int (commands.getoutput(tool_prefix+"size "+file_path+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f4"))
     
     file_size_KB = program_memory_size / 1024.0
     
