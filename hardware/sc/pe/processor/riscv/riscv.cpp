@@ -282,11 +282,13 @@ xlenreg_t RiscV::mem_read(sc_uint<34> address)
 	return ret;
 }
 
-void RiscV::mem_write(sc_uint<34> address, xlenreg_t value)
+void RiscV::mem_write(sc_uint<34> address, xlenreg_t value, uint8_t byte)
 {
 	mem_address.write(address);
 	mem_data_w.write(value);
+	mem_byte_we.write(byte);	// Enable write
 	wait(Timings::MEM_WRITE);
+	mem_byte_we.write(0);		// Disable write
 }
 
 void RiscV::handle_exceptions(Exceptions::CODE code)
@@ -1203,7 +1205,7 @@ bool RiscV::sb()
 	r.write(r.read() + x[instr.rs1()].read());
 
 	// Store Byte must be 8-bit aligned
-	const uint32_t offset = r.read() & 0x00000003;
+	uint32_t offset = r.read() & 0x00000003;
 
 	Address vir_addr;
 	vir_addr.write((r.read() & 0xFFFFFFFC));
@@ -1213,16 +1215,15 @@ bool RiscV::sb()
 		return true;
 
 	if(offset == 3)
-		mem_byte_we.write(0x8); // High byte
+		offset = 0x8; // High byte
 	else if(offset == 2)
-		mem_byte_we.write(0x4);
+		offset = 0x4;
 	else if(offset)
-		mem_byte_we.write(0x2);
+		offset = 0x2;
 	else
-		mem_byte_we.write(0x1); // Low half
+		offset = 0x1;
 
-	mem_write(phy_addr.read(), x[instr.rs2()].read());
-	mem_byte_we.write(0x0);
+	mem_write(phy_addr.read(), x[instr.rs2()].read(), offset);
 
 	return false;
 }
@@ -1239,7 +1240,7 @@ bool RiscV::sh()
 	r.write(r.read() + x[instr.rs1()].read());
 
 	// Store Half must be 16-bit aligned
-	const uint32_t offset = r.read() & 0x00000003;
+	uint32_t offset = r.read() & 0x00000003;
 	if(offset % 2){
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
 		return true;
@@ -1253,12 +1254,11 @@ bool RiscV::sh()
 		return true;
 
 	if(offset)
-		mem_byte_we.write(0xC); // High half
+		offset = 0xC;	// High half
 	else
-		mem_byte_we.write(0x3); // Low half
+		offset = 0x3;	// Lower half
 
-	mem_write(phy_addr.read(), x[instr.rs2()].read());
-	mem_byte_we.write(0x0);
+	mem_write(phy_addr.read(), x[instr.rs2()].read(), offset);
 
 	return false;
 }
@@ -1288,9 +1288,7 @@ bool RiscV::sw()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
 		return true;
 
-	mem_byte_we.write(0xF); // Write whole byte
-	mem_write(phy_addr.read(), x[instr.rs2()].read());
-	mem_byte_we.write(0x0);
+	mem_write(phy_addr.read(), x[instr.rs2()].read(), 0xF);
 
 	return false;
 }

@@ -246,8 +246,9 @@ private:
 	 * 
 	 * @param address 	The memory address to be written.
 	 * @param value		The value to be written
+	 * @param byte		The write enable byte to write.
 	 */
-	void mem_write(sc_uint<34> address, xlenreg_t value);
+	void mem_write(sc_uint<34> address, xlenreg_t value, uint8_t byte);
 
 	/**
 	 * @brief Handles synchronous exceptions
