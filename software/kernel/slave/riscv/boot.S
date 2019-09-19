@@ -10,7 +10,14 @@
 
 .globl _start
 _start:
-	li		sp,sp_addr
+	li		sp,sp_addr	# Stack to top
+
+	# Configure system status MPP=3, MPIE=1, MIE=0
+	li		t0, 0x1880
+	csrw	mstatus, t0
+	
+	# Clear interrupts
+	csrw	mip, zero
 
 	# Configure Syscall
 	la		t0,vector_entry		# Load the vector_entry address to t0
