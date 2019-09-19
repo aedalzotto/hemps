@@ -1054,15 +1054,15 @@ bool RiscV::lb()
 		return true;
 
 	if(offset == 3){	// High byte
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
 	} else if(offset == 2){
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
 	} else if(offset){
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
 	} else {	// Low byte
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
 	}
-	x[instr.rs2()].range(31, 8) = -1 * x[instr.rs2()].bit(7);	// Sign-extended
+	x[instr.rd()].range(31, 8) = -1 * x[instr.rd()].bit(7);	// Sign-extended
 
 	return false;
 }
@@ -1091,11 +1091,11 @@ bool RiscV::lh()
 		return true;
 
 	if(offset){	// High byte
-		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
 	} else {	// Low byte
-		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
 	}
-	x[instr.rs2()].range(31, 16) = -1 * x[instr.rs2()].bit(15);	// Sign-extended
+	x[instr.rd()].range(31, 16) = -1 * x[instr.rd()].bit(15);	// Sign-extended
 
 	return false;
 }
@@ -1123,7 +1123,7 @@ bool RiscV::lw()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	x[instr.rs2()].write(mem_read(phy_addr.read()));
+	x[instr.rd()].write(mem_read(phy_addr.read()));
 	return false;
 }
 
@@ -1147,15 +1147,15 @@ bool RiscV::lbu()
 		return true;
 
 	if(offset == 3){	// High byte
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
 	} else if(offset == 2){
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
 	} else if(offset){
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
 	} else {	// Low byte
-		x[instr.rs2()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
 	}
-	x[instr.rs2()].range(31, 8) = 0;	// 0-extended
+	x[instr.rd()].range(31, 8) = 0;	// 0-extended
 
 	return false;
 }
@@ -1184,11 +1184,11 @@ bool RiscV::lhu()
 		return true;
 
 	if(offset){	// High byte
-		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
 	} else {	// Low byte
-		x[instr.rs2()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
 	}
-	x[instr.rs2()].range(31, 16) = 0;	// 0-extended
+	x[instr.rd()].range(31, 16) = 0;	// 0-extended
 
 	return false;
 }
