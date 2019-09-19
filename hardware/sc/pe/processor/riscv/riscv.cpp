@@ -883,10 +883,8 @@ bool RiscV::jalr()
 	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
 	
 	r.range(11, 0) = instr.imm_11_0();
-	r.write(r.read() + pc.read());
+	r.write(r.read() + x[instr.rs1()].read());
 	r.bit(0) = 0;
-
-	r.write(r.read() + pc.read());
 
 	if(r.read() % 4)
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
