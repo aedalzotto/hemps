@@ -287,8 +287,9 @@ void RiscV::mem_write(sc_uint<34> address, xlenreg_t value, uint8_t byte)
 	mem_address.write(address);
 	mem_data_w.write(value);
 	mem_byte_we.write(byte);	// Enable write
-	wait(Timings::MEM_WRITE);
+	wait(1);
 	mem_byte_we.write(0);		// Disable write
+	wait(Timings::MEM_WRITE);
 }
 
 void RiscV::handle_exceptions(Exceptions::CODE code)
