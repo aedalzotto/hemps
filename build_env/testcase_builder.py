@@ -236,8 +236,8 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, syst
     
     lines = []
 
-    lines.append("PAGE_SP_INIT = "+ str((page_size_KB  *  1024) - 0 if processor_arch == "riscv" else 1) + "\n")
-    lines.append("MEM_SP_INIT  = "+ str((memory_size_KB * 1024) - 0 if processor_arch == "riscv" else 1) + "\n")
+    lines.append("PAGE_SP_INIT = "+ str((page_size_KB  *  1024) - (0 if processor_arch == "riscv" else 1)) + "\n")
+    lines.append("MEM_SP_INIT  = "+ str((memory_size_KB * 1024) - (0 if processor_arch == "riscv" else 1)) + "\n")
     
     append_lines_at_end_of_file(make_file_path, lines)
     
