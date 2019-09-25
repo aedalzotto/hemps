@@ -83,8 +83,8 @@
 #define IRQ_NOC					 	0x20 //bit 5
          
 /*Memory Access*/
-#define MemoryRead(A) (*(volatile unsigned int*)(A))
-#define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
+// #define MemoryRead(A) (*(volatile unsigned int*)(A))
+// #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
 enum PROC_REGS {
 	REG_ZERO,
@@ -123,6 +123,9 @@ enum PROC_REGS {
 	REG_HI = 26,
 	REG_LO = 27
 };
+
+extern inline unsigned int MemoryRead(volatile unsigned int address);
+extern inline void MemoryWrite(volatile unsigned int address, unsigned int value);
 
 #endif /*__PLASMA_H__*/
 

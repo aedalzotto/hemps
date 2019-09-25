@@ -11,16 +11,16 @@
  * This module is only used by slave kernel
  */
 
-#include "communication.h"
-#include "utils.h"
-
 #ifdef __mips__
-	#include "../include/plasma.h"
+	#include "../cpu/plasma.h"
 #elif defined(__riscv)
-	#include "../include/riscv.h"
+	#include "../cpu/riscv.h"
 #else
 	#error Unsupported targed architecture
 #endif
+
+#include "communication.h"
+#include "utils.h"
 
 PipeSlot pipe[PIPE_SIZE];						//!< pipe array
 

@@ -31,6 +31,10 @@ MODULES_NAMES = utils packet applications pending_service reclustering new_task 
 MODULES_SRC = $(addsuffix .c, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) ) $(addsuffix .h, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
 MODULES_TGT = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
 
+CPU_DIR = cpu
+CPU_SRC = $(CPU_DIR)/plasma.c
+CPU_OBJ = $(CPU_DIR)/plasma.o
+
 KERNEL_MASTER_MODULES = utils packet applications reclustering new_task communication processors resource_manager
 KERNEL_MASTER_TGT     = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_MASTER_MODULES) ) )
 
@@ -47,22 +51,26 @@ $(MODULES_TGT): $(MODULES_SRC)
 	@printf "${RED}Compiling Kernel %s ...${NC}\n" "$*.c"
 	$(GCC_MIPS) -o $*.o $*.c
 
-$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
+$(CPU_OBJ) : $(CPU_SRC)
+	@printf "${RED}Compiling Kernel CPU code: %s ...${NC}\n" "$*.c"
+	$(GCC_MIPS) $(CFLAGS) $< -o $@ 
+
+$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC) $(CPU_OBJ)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	$(AS_MIPS) --defsym sp_addr=$(MEM_SP_INIT) -o $(BOOT_MASTER).o $(BOOT_MASTER_SRC)
 	$(GCC_MIPS) -DHOP_NUMBER=1 -Dload -o $(KERNEL_MASTER).o $(KERNEL_MASTER_SRC) -D IS_MASTER
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.bin $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	$(DUMP_MIPS) -S $(KERNEL_MASTER)_debug.bin > $(KERNEL_MASTER).lst
 	$(COPY_MIPS) $(KERNEL_MASTER).bin $(KERNEL_MASTER).dump
 	hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
 
-$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC)
+$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC) $(CPU_OBJ)
 	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	$(AS_MIPS) --defsym sp_addr=$(PAGE_SP_INIT) -o $(BOOT_SLAVE).o $(BOOT_SLAVE_SRC)
 	$(GCC_MIPS) -o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_SRC) -D PLASMA
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
+	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.bin $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	$(DUMP_MIPS) -S $(KERNEL_SLAVE)_debug.bin > $(KERNEL_SLAVE).lst
 	$(COPY_MIPS) $(KERNEL_SLAVE).bin $(KERNEL_SLAVE).dump
 	hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_SLAVE).dump > $(KERNEL_SLAVE).txt

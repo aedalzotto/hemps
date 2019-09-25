@@ -14,9 +14,9 @@
 #include "utils.h"
 
 #ifdef __mips__
-	#include "../include/plasma.h"
+	#include "../cpu/plasma.h"
 #elif defined(__riscv)
-	#include "../include/riscv.h"
+	#include "../cpu/riscv.h"
 #else
 	#error Unsupported targed architecture
 #endif

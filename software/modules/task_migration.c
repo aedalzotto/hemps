@@ -13,20 +13,20 @@
  */
 #include "task_migration.h"
 
+#ifdef __mips__
+	#include "../cpu/plasma.h"
+#elif defined(__riscv)
+	#include "../cpu/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
+
 #include "../../include/kernel_pkg.h"
 #include "../include/services.h"
 #include "task_location.h"
 #include "task_scheduler.h"
 #include "communication.h"
 #include "utils.h"
-
-#ifdef __mips__
-	#include "../include/plasma.h"
-#elif defined(__riscv)
-	#include "../include/riscv.h"
-#else
-	#error Unsupported targed architecture
-#endif
 
 #define TASK_MIGRATION_DEBUG	0		//!<When enable shows puts related to task migration
 

@@ -23,7 +23,7 @@
 #define ECHO      			4
 #define	 REALTIME			5
 
-#define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
+// #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 #define TRUE	1
 #define FALSE	0
 

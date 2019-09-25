@@ -19,6 +19,14 @@
 
 #include "kernel_slave.h"
 
+#ifdef __mips__
+	#include "../../cpu/plasma.h"
+#elif defined(__riscv)
+	#include "../../cpu/riscv.h"
+#else
+	#error Unsupported targed architecture
+#endif
+
 #include "../../../include/kernel_pkg.h"
 #include "../../include/api.h"
 #include "../../include/services.h"
@@ -32,14 +40,6 @@
 #include "../../modules/task_migration.h"
 #endif
 
-#ifdef __mips__
-	#include "../../include/plasma.h"
-#elif defined(__riscv)
-	#include "../../include/riscv.h"
-#else
-	#error Unsupported targed architecture
-#endif
-
 //Globals
 unsigned int 	net_address;				//!< Store the current XY address
 unsigned int 	schedule_after_syscall;		//!< Signals the syscall function (assembly implemented) to call the scheduler after the syscall
@@ -49,7 +49,6 @@ unsigned int 	total_slack_time;			//!< Store the total of the processor idle tim
 TCB 			idle_tcb;					//!< TCB pointer used to run idle task
 TCB *			current;					//!< TCB pointer used to store the current task executing into processor
 Message 		msg_write_pipe;				//!< Message variable which is used to copy a message and send it by the NoC
-
 
 /** Assembles and sends a TASK_TERMINATED packet to the master kernel
  *  \param terminated_task Terminated task TCB pointer

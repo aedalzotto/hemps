@@ -30,13 +30,12 @@
 #include "../../modules/processors.h"
 
 #ifdef __mips__
-	#include "../../include/plasma.h"
+	#include "../../cpu/plasma.h"
 #elif defined(__riscv)
-	#include "../../include/riscv.h"
+	#include "../../cpu/riscv.h"
 #else
 	#error Unsupported targed architecture
 #endif
-
 
 /*Local Manager (LM) global variables*/
 unsigned int 	pending_app_to_map = 0; 					//!< Controls the number of pending applications already handled by not completely mapped

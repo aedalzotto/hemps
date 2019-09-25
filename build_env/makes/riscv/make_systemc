@@ -3,7 +3,7 @@ NC   =\033[0m # No Color
 
 #systemc g++ compiler
 CXX = g++
-CXXFLAGS = -g -Wall -O2 -DRISCV_SIM
+CXXFLAGS = -g -Wall -O0 -DRISCV_SIM
 
 HEMPS_TGT=$(notdir $(patsubst %/,%,$(dir $(CURDIR))))
 

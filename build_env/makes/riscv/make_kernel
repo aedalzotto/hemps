@@ -30,6 +30,10 @@ MODULES_NAMES = utils packet applications pending_service reclustering new_task 
 MODULES_SRC = $(addsuffix .c, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) ) $(addsuffix .h, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
 MODULES_TGT = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
 
+CPU_DIR = cpu
+CPU_SRC = $(CPU_DIR)/riscv.c
+CPU_OBJ = $(CPU_DIR)/riscv.o
+
 KERNEL_MASTER_MODULES = utils packet applications reclustering new_task communication processors resource_manager
 KERNEL_MASTER_TGT     = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_MASTER_MODULES) ) )
 
@@ -48,22 +52,26 @@ $(MODULES_TGT): $(MODULES_SRC)
 	@printf "${RED}Compiling Kernel %s ...${NC}\n" "$*.c"
 	@$(GCC) -c $*.c -o $*.o $(CFLAGS)
 
-$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC)
+$(CPU_OBJ) : $(CPU_SRC)
+	@printf "${RED}Compiling Kernel CPU code: %s ...${NC}\n" "$*.c"
+	@$(GCC) -c $< -o $@ $(CFLAGS)
+
+$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC) $(CPU_OBJ)
 	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	@$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
 	@$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	@$(DUMP) -S $(KERNEL_MASTER)_debug.elf > $(KERNEL_MASTER).lst
 	@$(COPY) $(KERNEL_MASTER).elf $(KERNEL_MASTER).bin
 	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_MASTER).bin > $(KERNEL_MASTER).txt
 
-$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC)
+$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC) $(CPU_OBJ)
 	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	@$(AS) $(BOOT_SLAVE_SRC) -o $(BOOT_SLAVE).o --defsym sp_addr=$(PAGE_SP_INIT)
 	@$(GCC) -c $(KERNEL_SLAVE_SRC) -o $(KERNEL_SLAVE).o $(CFLAGS)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	@$(DUMP) -S $(KERNEL_SLAVE)_debug.elf > $(KERNEL_SLAVE).lst
 	@$(COPY) $(KERNEL_SLAVE).elf $(KERNEL_SLAVE).bin
 	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_SLAVE).bin > $(KERNEL_SLAVE).txt
