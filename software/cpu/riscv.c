@@ -7,12 +7,12 @@
 inline unsigned int MemoryRead(volatile unsigned int address)
 {
 	unsigned int value = *(volatile unsigned int*)address;
-	// value = __bswap_constant_32(value);
+	value = __bswap_constant_32(value);
 	return value;
 }
 
 inline void MemoryWrite(volatile unsigned int address, unsigned int value)
 {
-	// value = __bswap_constant_32(value);
+	value = __bswap_constant_32(value);
 	*(volatile unsigned int*)address = value;
 }

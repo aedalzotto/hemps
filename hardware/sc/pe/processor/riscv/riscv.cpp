@@ -1375,7 +1375,8 @@ bool RiscV::andi()
 bool RiscV::slli()
 {
 	wait(Timings::LOGICAL);
-	x[instr.rd()].write(x[instr.rs1()].read() << instr.imm_4_0());
+	// rs2 is imm[4:0] for shift
+	x[instr.rd()].write(x[instr.rs1()].read() << instr.rs2());
 
 	return false;
 }
@@ -1383,7 +1384,8 @@ bool RiscV::slli()
 bool RiscV::srli()
 {
 	wait(Timings::LOGICAL);
-	x[instr.rd()].write(x[instr.rs1()].read() >> instr.imm_4_0());
+	// rs2 is imm[4:0] for shift
+	x[instr.rd()].write(x[instr.rs1()].read() >> instr.rs2());
 
 	return false;
 }
@@ -1397,8 +1399,9 @@ bool RiscV::srai()
 
 	// Sign-extend
 	uint32_t sign = 0xFFFFFFFF * r.bit(31);
-	r.write(r.read() >> instr.imm_4_0());
-	r.range(31, 31 - instr.imm_4_0()) = sign;
+	// rs2 is imm[4:0] for shift
+	r.write(r.read() >> instr.rs2());
+	r.range(31, 31 - instr.rs2()) = sign;
 
 	x[instr.rd()].write(r.read());
 
