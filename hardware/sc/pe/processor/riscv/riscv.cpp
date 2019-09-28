@@ -857,7 +857,7 @@ bool RiscV::jal()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,20) = (int)instr.imm_20() * -1;
+	r.range(31,20) = (int)instr.bit(31) * -1;
 	
 	r.range(19, 12) = instr.imm_19_12();
 	r.bit(11) = instr.imm_11_J();
@@ -883,7 +883,7 @@ bool RiscV::jalr()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
@@ -903,7 +903,7 @@ bool RiscV::beq()
 	if(x[instr.rs1()].read() == x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -926,7 +926,7 @@ bool RiscV::bne()
 	if(x[instr.rs1()].read() != x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -949,7 +949,7 @@ bool RiscV::blt()
 	if((int)x[instr.rs1()].read() < (int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -972,7 +972,7 @@ bool RiscV::bge()
 	if((int)x[instr.rs1()].read() >= (int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -995,7 +995,7 @@ bool RiscV::bltu()
 	if((unsigned int)x[instr.rs1()].read() < (unsigned int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -1018,7 +1018,7 @@ bool RiscV::bgeu()
 	if((unsigned int)x[instr.rs1()].read() >= (unsigned int)x[instr.rs2()].read()){ // Taken
 		// Sign-extend offset
 		Register r;
-		r.range(31,12) = (int)instr.imm_12() * -1;
+		r.range(31,12) = (int)instr.bit(31) * -1;
 		r.bit(11) = instr.imm_11_B();
 		r.range(10, 5) = instr.imm_10_5();
 		r.range(4, 1) = instr.imm_4_1();
@@ -1040,7 +1040,7 @@ bool RiscV::lb()
 	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
@@ -1073,7 +1073,7 @@ bool RiscV::lh()
 	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
@@ -1106,7 +1106,7 @@ bool RiscV::lw()
 	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
@@ -1133,7 +1133,7 @@ bool RiscV::lbu()
 	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
@@ -1166,7 +1166,7 @@ bool RiscV::lhu()
 	wait(Timings::LOGICAL);
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 
@@ -1200,7 +1200,7 @@ bool RiscV::sb()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 5) = instr.imm_11_5();
 	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
@@ -1235,7 +1235,7 @@ bool RiscV::sh()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 5) = instr.imm_11_5();
 	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
@@ -1270,7 +1270,7 @@ bool RiscV::sw()
 
 	// Sign-extend offset
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_5() >> 7) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 5) = instr.imm_11_5();
 	r.range(4, 0) = instr.imm_4_0();
 	r.write(r.read() + x[instr.rs1()].read());
@@ -1299,7 +1299,7 @@ bool RiscV::addi()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(x[instr.rs1()].read() + r.read());
@@ -1312,7 +1312,7 @@ bool RiscV::slti()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(((int)x[instr.rs1()].read() < (int)r.read()));
@@ -1325,7 +1325,7 @@ bool RiscV::sltiu()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(((unsigned int)x[instr.rs1()].read() < (unsigned int)r.read()));
@@ -1338,7 +1338,7 @@ bool RiscV::xori()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(x[instr.rs1()].read() ^ r.read());
@@ -1351,7 +1351,7 @@ bool RiscV::ori()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(x[instr.rs1()].read() | r.read());
@@ -1364,7 +1364,7 @@ bool RiscV::andi()
 	wait(Timings::LOGICAL);
 	// Sign-extend immediate
 	Register r;
-	r.range(31,12) = ((int)instr.imm_11_0() >> 11) * -1;
+	r.range(31,12) = (int)instr.bit(31) * -1;
 	r.range(11, 0) = instr.imm_11_0();
 
 	x[instr.rd()].write(x[instr.rs1()].read() & r.read());
