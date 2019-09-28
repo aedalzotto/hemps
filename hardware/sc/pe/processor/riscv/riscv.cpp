@@ -1224,7 +1224,9 @@ bool RiscV::sb()
 	else
 		offset = 0x1;
 
-	mem_write(phy_addr.read(), x[instr.rs2()].read(), offset);
+	uint32_t byte_write = x[instr.rs2()].read();
+	byte_write |= (byte_write << 24) | (byte_write << 16) | (byte_write << 8);
+	mem_write(phy_addr.read(), byte_write, offset);
 
 	return false;
 }
@@ -1259,7 +1261,9 @@ bool RiscV::sh()
 	else
 		offset = 0x3;	// Lower half
 
-	mem_write(phy_addr.read(), x[instr.rs2()].read(), offset);
+	uint32_t byte_write = x[instr.rs2()].read();
+	byte_write |= (byte_write << 16);
+	mem_write(phy_addr.read(), byte_write, offset);
 
 	return false;
 }
