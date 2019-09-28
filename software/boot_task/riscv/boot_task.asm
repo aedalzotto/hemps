@@ -6,6 +6,11 @@
 
 .globl _start  	# Exports entry symbol
 _start:
+	.option push
+    .option norelax
+    la gp, __global_pointer$
+    .option pop
+	
 	li sp, sp_addr	# Stack pointer address passed on makefile. Loads the page size to the sp.
 
 	# JAL: Jump and Link

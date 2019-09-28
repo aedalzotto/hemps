@@ -10,6 +10,11 @@
 
 .globl _start
 _start:
+	.option push
+    .option norelax
+    la gp, __global_pointer$
+    .option pop
+	
 	li		sp,sp_addr	# Stack to top
 
 	# Configure system status MPP=3, MPIE=1, MIE=0
