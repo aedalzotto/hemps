@@ -140,7 +140,6 @@ void pe::reset_n_attr(){
 void pe::sequential_attr(){
 
 	FILE *fp;
-	char c, end;
 
 	if (reset.read() == 1) {
 		cpu_mem_address_reg.write(0);
@@ -193,18 +192,10 @@ void pe::sequential_attr(){
 			sprintf(aux, "log/log%dx%d.txt", (unsigned int) router_address.range(15,8), (unsigned int) router_address.range(7,0));
 			fp = fopen (aux, "a");
 
-			end = 0;
 			uint32_t word = cpu_mem_data_write_reg.read();
-			for(int i=0;i<4;i++) {
-				c = ((char*)word)[i];
-				printf("%c\n", c);
-
-				if(c)
-					fprintf(fp, "%c", c);
-				else
-					break;
-				
-			}
+			char str[5] = {};
+			memcpy(str, &word, 4);
+			fprintf(fp, "%s", str);
 
 			fclose (fp);
 		}
