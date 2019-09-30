@@ -194,21 +194,16 @@ void pe::sequential_attr(){
 			fp = fopen (aux, "a");
 
 			end = 0;
+			uint32_t word = cpu_mem_data_write_reg.read();
 			for(int i=0;i<4;i++) {
-				c = cpu_mem_data_write_reg.read().range(31-i*8,24-i*8);
+				c = ((char*)word)[i];
+				printf("%c\n", c);
 
-				//Writes a string in the line
-				if(c != 10 && c != 0 && !end){
-					fprintf(fp,"%c",c);
-				}
-				//Detects the string end
-				else if(c == 0){
-					end = true;
-				}
-				//Line feed detected. Writes the line in the file
-				else if(c == 10){
-					fprintf(fp,"%c",c);
-				}
+				if(c)
+					fprintf(fp, "%c", c);
+				else
+					break;
+				
 			}
 
 			fclose (fp);

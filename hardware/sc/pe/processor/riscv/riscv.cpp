@@ -278,25 +278,25 @@ xlenreg_t RiscV::mem_read(sc_uint<34> address)
 {
 	mem_address.write(address);
 	wait(Timings::MEM_READ);
-	xlenreg_t val = mem_data_r.read();
-	xlenreg_t ret;
-	ret.range(31, 24) = val.range(7, 0);
-	ret.range(23, 16) = val.range(15, 8);
-	ret.range(15, 8) = val.range(23, 16);
-	ret.range(7, 0) = val.range(31, 24);
+	xlenreg_t ret = mem_data_r.read();
+	// xlenreg_t ret;
+	// ret.range(31, 24) = val.range(7, 0);
+	// ret.range(23, 16) = val.range(15, 8);
+	// ret.range(15, 8) = val.range(23, 16);
+	// ret.range(7, 0) = val.range(31, 24);
 	return ret;
 }
 
 void RiscV::mem_write(sc_uint<34> address, xlenreg_t value, uint8_t byte)
 {
-	xlenreg_t arg;
-	arg.range(31, 24) = value.range(7, 0);
-	arg.range(23, 16) = value.range(15, 8);
-	arg.range(15, 8) = value.range(23, 16);
-	arg.range(7, 0) = value.range(31, 24);
+	// xlenreg_t arg;
+	// arg.range(31, 24) = value.range(7, 0);
+	// arg.range(23, 16) = value.range(15, 8);
+	// arg.range(15, 8) = value.range(23, 16);
+	// arg.range(7, 0) = value.range(31, 24);
 
 	mem_address.write(address);
-	mem_data_w.write(arg);
+	mem_data_w.write(value);
 	mem_byte_we.write(byte);	// Enable write
 	wait(1);
 	mem_byte_we.write(0);		// Disable write
@@ -1195,7 +1195,7 @@ bool RiscV::lhu()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	if(offset){	// Higher address (rightmost) will be on higher bytes when shifted
+	if(offset){	// Higher address (rightmost)
 		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
 	} else {	// Low byte
 		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
