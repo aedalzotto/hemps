@@ -1065,14 +1065,14 @@ bool RiscV::lb()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	if(offset == 3){	// Higher address (rightmost) will be on higher byte when shifted
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+	if(offset == 3){	// MSB
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31, 24);
 	} else if(offset == 2){
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23, 16);
 	} else if(offset){
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
-	} else {	// Low byte
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15, 8);
+	} else {			// LSB
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7, 0);
 	}
 	x[instr.rd()].range(31, 8) = -1 * x[instr.rd()].bit(7);	// Sign-extended
 
@@ -1102,10 +1102,10 @@ bool RiscV::lh()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	if(offset){	// Higher address (rightmost) will be on higher bytes when shifted
-		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
-	} else {	// Low byte
-		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+	if(!offset){	// LSW
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15, 0);
+	} else {		// MSW
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31, 16);
 	}
 	x[instr.rd()].range(31, 16) = -1 * x[instr.rd()].bit(15);	// Sign-extended
 
@@ -1158,14 +1158,14 @@ bool RiscV::lbu()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	if(offset == 3){	// Higher address (rightmost) will be on higher byte when shift
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31,24);
+	if(offset == 3){	// MSB
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31, 24);
 	} else if(offset == 2){
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23,16);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(23, 16);
 	} else if(offset){
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15,8);
-	} else {	// Low byte
-		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7,0);
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(15, 8);
+	} else {			// LSB
+		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(7, 0);
 	}
 	x[instr.rd()].range(31, 8) = 0;	// 0-extended
 
@@ -1195,10 +1195,10 @@ bool RiscV::lhu()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
-	if(offset){	// Higher address (rightmost)
-		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31,16);
-	} else {	// Low byte
-		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15,0);
+	if(!offset){	// LSW
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15, 0);
+	} else {		// MSW
+		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(31, 16);
 	}
 	x[instr.rd()].range(31, 16) = 0;	// 0-extended
 
@@ -1226,14 +1226,16 @@ bool RiscV::sb()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
 		return true;
 
+	// This seem odd, but this image can help understand:
+	// https://upload.wikimedia.org/wikipedia/commons/e/ed/Little-Endian.svg
 	if(offset == 3)
-		offset = 0x1; // Higher address (rightmost)
+		offset = 0x8;	// MSB
 	else if(offset == 2)
-		offset = 0x2;
-	else if(offset)
 		offset = 0x4;
+	else if(offset)
+		offset = 0x2;
 	else
-		offset = 0x8; // Lower address (leftmost)
+		offset = 0x1;	// LSB
 
 	uint32_t byte_write = x[instr.rs2()].read().range(7, 0);
 	byte_write |= (byte_write << 24) | (byte_write << 16) | (byte_write << 8);
@@ -1267,10 +1269,10 @@ bool RiscV::sh()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
 		return true;
 
-	if(offset)
-		offset = 0x3;	// Higher address (rightmos)
+	if(!offset)
+		offset = 0x3;	// LSW
 	else
-		offset = 0xC;	// Lower address (leftmost)
+		offset = 0xC;	// MSW
 
 	uint32_t byte_write = x[instr.rs2()].read().range(15, 0);
 	byte_write |= (byte_write << 16);
