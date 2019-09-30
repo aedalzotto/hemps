@@ -13,6 +13,7 @@ inline unsigned int MemoryRead(volatile unsigned int address)
 
 inline void MemoryWrite(volatile unsigned int address, unsigned int value)
 {
-	value = __bswap_constant_32(value);
+	// Char array doesn't need swap
+	// value = __bswap_constant_32(value);
 	*(volatile unsigned int*)address = value;
 }
