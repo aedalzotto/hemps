@@ -36,8 +36,8 @@
 #define NEXT_PAGE			0x20000190
 
 /* DMNI*/
-#define DMNI_SIZE_2				0x20000205
-#define DMNI_ADDRESS_2 			0x20000215
+#define DMNI_SIZE_2				0x20000204
+#define DMNI_ADDRESS_2 			0x20000214
 #define DMNI_SIZE		  		0x20000200
 #define DMNI_ADDRESS		  	0x20000210
 #define DMNI_OP			  		0x20000220
@@ -55,9 +55,9 @@
 
 //Communication graphical debbug
 #define ADD_PIPE_DEBUG			0x20000280
-#define REM_PIPE_DEBUG			0x20000285
+#define REM_PIPE_DEBUG			0x20000284
 #define ADD_REQUEST_DEBUG		0x20000290
-#define REM_REQUEST_DEBUG		0x20000295
+#define REM_REQUEST_DEBUG		0x20000294
 
 /* DMNI operations */
 #define READ	0
