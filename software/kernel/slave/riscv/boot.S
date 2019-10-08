@@ -24,6 +24,10 @@ _start:
 	# Clear interrupts
 	csrw	mip, zero
 
+	# Enable MEI when unmasked
+	li		t0, 0x800
+	csrw	mie, t0
+
 	# Configure Syscall
 	la		t0,vector_entry		# Load the vector_entry address to t0
 	csrw	mtvec,t0			# Write vector_entry address to mtvec
@@ -93,7 +97,7 @@ save_ctx:
 	#sw		zero,0(t0)
 	sw		ra,4(t0)
 	sw		sp,8(t0)
-	sw		gp,12(t0)
+	# sw		gp,12(t0)	# gp can't be lost
 	sw		tp,16(t0)
 	#sw		t0,20(t0)
 	sw		t1,24(t0)
@@ -156,7 +160,7 @@ ASM_RunScheduledTask:
 	#lw		zero,0(a0)
 	lw		ra,4(a0)
 	lw		sp,8(a0)
-	lw		gp,12(a0)
+	# lw		gp,12(a0)	# gp can't be lost
 	lw		tp,16(a0)
 	lw		t0,20(a0)
 	lw		t1,24(a0)
@@ -195,17 +199,13 @@ ASM_RunScheduledTask:
 
 .globl  ASM_SetInterruptEnable        
 ASM_SetInterruptEnable:
-	# Interrupts can't be disabled globally for lower privilege modes
-	# But the only interrupt that will occur in HeMPS is MEI
-	# We can mask MEI while in M-Mode and it will not trigger U-Mode
-
 	# a0 has value for enable/disable
 
-	slli	t0,a0,11		# t0 = Enable << 11 (MEI)
-	beqz	a0,disable_mei	# If !enable, clear MEI
-	csrs	mie,t1			# Else, set MEI
+	li		t0, 0x8			# MIE
+	beqz	a0,disable_mie	# If !enable, clear MIE
+	csrs	mstatus,t0		# Else, set MIE
 	ret
-disable_mei:
-	csrc	mie,t0		# Clear MEI if enable
+disable_mie:
+	csrc	mstatus,t0		# Clear MIE if enable
 	ret
 	

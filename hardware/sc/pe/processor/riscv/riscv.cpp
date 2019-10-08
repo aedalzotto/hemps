@@ -153,9 +153,9 @@ bool RiscV::handle_interrupts()
 		mstatus.MIE() = 0;					  // Disable interrupt-enable of target mode
 		mepc.write(pc.read());				  // Previous PC
 		if(mtvec.MODE() == (uint32_t)Mtvec::Mode::VECTORED){ // New pc
-			pc.write(mtvec.BASE() + 4 * mcause.exception_code());
+			pc.write((mtvec.BASE() << 2) + 4 * mcause.exception_code());
 		} else { // Direct
-			pc.write(mtvec.BASE());
+			pc.write((mtvec.BASE() << 2));
 		}
 		return true;	// Interrupt taken
 	} else if((mip.read() & mie.read() & mideleg.read()) && // Supervisor-level interrupt
@@ -182,9 +182,9 @@ bool RiscV::handle_interrupts()
 		mstatus.SIE() = 0;						// Disable interrupt-enable of target mode
 		sepc.write(pc.read());					// Previous PC
 		if(stvec.MODE() == (uint32_t)Mtvec::Mode::VECTORED){ // New pc
-			pc.write(stvec.BASE() + 4 * scause.exception_code());
+			pc.write((stvec.BASE() << 2) + 4 * scause.exception_code());
 		} else { // Direct
-			pc.write(stvec.BASE());
+			pc.write((stvec.BASE() << 2));
 		}
 		return true;	// Interrupt taken
 	} // User-level interrupts not implemented
@@ -1913,7 +1913,7 @@ bool RiscV::csr_helper(uint16_t addr, bool rw, Register* &csr, uint32_t &wmask_a
 	case CSR::Address::MTVEC:
 		// @todo Block value 0x11 to be written to MODE
 		csr = &mtvec;
-		wmask_and = 0xFFFFFFF3; // BASE 4B aligned
+		wmask_and = 0xFFFFFFFC; // BASE 4B aligned
 		break;
 	case CSR::Address::MEDELEG:
 		csr = &medeleg;
@@ -1956,7 +1956,7 @@ bool RiscV::csr_helper(uint16_t addr, bool rw, Register* &csr, uint32_t &wmask_a
 	case CSR::Address::STVEC:
 		// @todo Block value 0x11 to be written to MODE
 		csr = &stvec;
-		wmask_and = 0xFFFFFFF3; // BASE 4B aligned
+		wmask_and = 0xFFFFFFFC; // BASE 4B aligned
 		break;
 	case CSR::Address::SIP:	// SIP is restricted view of MIP
 		csr = &mip;
