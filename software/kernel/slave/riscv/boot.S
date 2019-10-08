@@ -73,6 +73,10 @@ exception_handler:
 # is_call:
 	# jumps to system calls handler
 	jal		Syscall
+	
+	# Save Syscall return to task TCB
+	lw		t0,current		# Load "current" to t0
+	sw		a0,40(t0)
 
 	# verifies if scheduling is needed
 	lw		t0,schedule_after_syscall
@@ -139,9 +143,8 @@ save_ctx:
 	li		sp,sp_addr	# Restore stack pointer to top
 
 	csrr	t4,mcause			# Load mcause to t4
-	li 		t5,0x80000000		# Bit 31
-	and		t6,t4,t5			# Check bit 31 (interrupt)
-	beqz	t6,exception_handler	# If 0 (exception) continue to ecall
+	li 		t5,0x80000000		# Bit 31 (interrupt)
+	blt		t4, t5, exception_handler	# If 0 (exception) continue to ecall
 	j 		interrupt_handler		# Else (interrupt) continue to isr
 
 ###################################################
