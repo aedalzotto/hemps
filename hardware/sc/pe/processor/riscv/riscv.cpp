@@ -863,8 +863,6 @@ bool RiscV::auipc()
 bool RiscV::jal()
 {
 	wait(Timings::LOGICAL);
-	// Save PC ("Link")
-	x[instr.rd()].write(pc.read()+4);
 
 	// Sign-extend offset
 	Register r;
@@ -876,6 +874,9 @@ bool RiscV::jal()
 	r.bit(0) = 0;
 	
 	r.write(r.read() + pc.read());
+
+	// Save PC ("Link")
+	x[instr.rd()].write(pc.read()+4);
 
 	if(r.read() % 4)
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
@@ -889,8 +890,6 @@ bool RiscV::jal()
 bool RiscV::jalr()
 {
 	wait(Timings::LOGICAL);
-	// Save PC ("Link")
-	x[instr.rd()].write(pc.read()+4);
 
 	// Sign-extend offset
 	Register r;
@@ -899,6 +898,9 @@ bool RiscV::jalr()
 	r.range(11, 0) = instr.imm_11_0();
 	r.write(r.read() + x[instr.rs1()].read());
 	r.bit(0) = 0;
+
+	// Save PC ("Link")
+	x[instr.rd()].write(pc.read()+4);
 
 	if(r.read() % 4)
 		handle_exceptions(Exceptions::CODE::INSTRUCTION_ADDRESS_MISALIGNED);
