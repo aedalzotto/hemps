@@ -333,7 +333,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 				stval.write(0);
 				break;	
 		}
-		pc.write(stvec.BASE());					// Synchronous exceptions are always DIRECT
+		pc.write(stvec.BASE() << 2);					// Synchronous exceptions are always DIRECT
 	} else {	// Handle in M-Mode
 		mcause.interrupt() = 0;
 		mcause.exception_code() = code;
@@ -362,7 +362,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 				mtval.write(0);
 				break;	
 		}
-		pc.write(mtvec.BASE());					// Synchronous exceptions are always DIRECT
+		pc.write(mtvec.BASE() << 2);					// Synchronous exceptions are always DIRECT
 	}
 }
 
