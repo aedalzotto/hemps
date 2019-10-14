@@ -10,10 +10,10 @@
 
 .globl _start
 _start:
-	.option push
-    .option norelax
-    la gp, __global_pointer$
-    .option pop
+	# .option push
+    # .option norelax
+    # la gp, __global_pointer$
+    # .option pop
 	
 	li		sp,sp_addr	# Stack to top
 
@@ -54,6 +54,7 @@ interrupt_handler:
 	lw		t2,0x10(t0)     # IRQ_MASK
 	and		a0,t1,t2		# Function arg
 	jal		OS_InterruptServiceRoutine
+	# The C function calls ASM_RunScheduledTask
 
 ####################################################
 
@@ -76,7 +77,7 @@ exception_handler:
 	
 	# Save Syscall return to task TCB
 	lw		t0,current		# Load "current" to t0
-	sw		a0,40(t0)
+	sw		a0,40(t0)		# Save a0
 
 	# verifies if scheduling is needed
 	lw		t0,schedule_after_syscall
@@ -144,7 +145,7 @@ save_ctx:
 
 	csrr	t4,mcause			# Load mcause to t4
 	li 		t5,0x80000000		# Bit 31 (interrupt)
-	blt		t4, t5, exception_handler	# If 0 (exception) continue to ecall
+	bltu	t4, t5, exception_handler	# If 0 (exception) continue to ecall
 	j 		interrupt_handler		# Else (interrupt) continue to isr
 
 ###################################################

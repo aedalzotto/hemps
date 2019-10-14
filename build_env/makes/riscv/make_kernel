@@ -4,7 +4,8 @@ NC   =\033[0m 		# No Color
 KERNEL_PKG_TGT    = ../include/kernel_pkg.o
 KERNEL_PKG_SRC    = $(KERNEL_PKG_TGT:.o=.c) $(KERNEL_PKG_TGT:.o=.h)
 
-CFLAGS				= -O2 -Wall -s -std=c99
+CFLAGS				= -O2 -Wall
+LDFLAGS				= --no-relax
 #CFLAGS			   += -fms-extensions
 GCC					= riscv-sifive-elf-gcc -march=rv32im
 AS					= riscv-sifive-elf-as -march=rv32im
@@ -70,8 +71,8 @@ $(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERN
 	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	@$(AS) $(BOOT_SLAVE_SRC) -o $(BOOT_SLAVE).o --defsym sp_addr=$(PAGE_SP_INIT)
 	@$(GCC) -c $(KERNEL_SLAVE_SRC) -o $(KERNEL_SLAVE).o $(CFLAGS)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
-	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ) $(LDFLAGS)
+	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ) $(LDFLAGS)
 	@$(DUMP) -S $(KERNEL_SLAVE)_debug.elf > $(KERNEL_SLAVE).lst
 	@$(COPY) $(KERNEL_SLAVE).elf $(KERNEL_SLAVE).bin
 	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_SLAVE).bin > $(KERNEL_SLAVE).txt
