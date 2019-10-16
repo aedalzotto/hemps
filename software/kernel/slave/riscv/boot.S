@@ -77,7 +77,7 @@ exception_handler:
 	
 	# Save Syscall return to task TCB
 	lw		t0,current		# Load "current" to t0
-	sw		a0,40(t0)		# Save a0
+	sw		a0,40(t0)		# Save a0 (syscall return)
 
 	# verifies if scheduling is needed
 	lw		t0,schedule_after_syscall
@@ -102,7 +102,7 @@ save_ctx:
 	#sw		zero,0(t0)
 	sw		ra,4(t0)
 	sw		sp,8(t0)
-	# sw		gp,12(t0)	# gp can't be lost
+	sw		gp,12(t0)
 	sw		tp,16(t0)
 	#sw		t0,20(t0)
 	sw		t1,24(t0)
@@ -164,7 +164,7 @@ ASM_RunScheduledTask:
 	#lw		zero,0(a0)
 	lw		ra,4(a0)
 	lw		sp,8(a0)
-	# lw		gp,12(a0)	# gp can't be lost
+	lw		gp,12(a0)
 	lw		tp,16(a0)
 	lw		t0,20(a0)
 	lw		t1,24(a0)
