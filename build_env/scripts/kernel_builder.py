@@ -27,7 +27,7 @@ def main():
     tool_prefix="mips-elf-"
     elf_ext=".bin"
     if processor_arch == "riscv":
-        tool_prefix="riscv-sifive-elf-"
+        tool_prefix="riscv64-unknown-elf-"
         elf_ext=".elf"
         
     print "\n***************** kernel page size report ***********************"

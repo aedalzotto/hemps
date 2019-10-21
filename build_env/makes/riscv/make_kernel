@@ -7,11 +7,11 @@ KERNEL_PKG_SRC    = $(KERNEL_PKG_TGT:.o=.c) $(KERNEL_PKG_TGT:.o=.h)
 CFLAGS				= -O2 -Wall
 LDFLAGS				= --no-relax
 #CFLAGS			   += -fms-extensions
-GCC					= riscv-sifive-elf-gcc -march=rv32im
-AS					= riscv-sifive-elf-as -march=rv32im
-LD					= riscv-sifive-elf-ld
-DUMP				= riscv-sifive-elf-objdump
-COPY				= riscv-sifive-elf-objcopy -O binary
+GCC					= riscv64-unknown-elf-gcc -march=rv32im -mabi=ilp32
+AS					= riscv64-unknown-elf-as -march=rv32im -mabi=ilp32
+LD					= riscv64-unknown-elf-ld -melf32lriscv
+DUMP				= riscv64-unknown-elf-objdump
+COPY				= riscv64-unknown-elf-objcopy -O binary
 
 BOOT_MASTER       = boot_master
 BOOT_MASTER_SRC   = kernel/master/riscv/boot.S

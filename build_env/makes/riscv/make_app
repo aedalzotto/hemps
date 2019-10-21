@@ -4,11 +4,11 @@ NC   =\033[0m # No Color
 INCLUDE           = ../../software/include
 
 CFLAGS            = -O2 -Wall -std=c99 -s
-GCC		          = riscv-sifive-elf-gcc -march=rv32im
-AS	          	  = riscv-sifive-elf-as -march=rv32im
-LD		          = riscv-sifive-elf-ld
-DUMP	          = riscv-sifive-elf-objdump
-COPY	          = riscv-sifive-elf-objcopy -O binary
+GCC		          = riscv64-unknown-elf-gcc -march=rv32im -mabi=ilp32
+AS	          	  = riscv64-unknown-elf-as -march=rv32im -mabi=ilp32
+LD		          = riscv64-unknown-elf-ld -melf32lriscv
+DUMP	          = riscv64-unknown-elf-objdump
+COPY	          = riscv64-unknown-elf-objcopy -O binary
 BOOT_TASK         = boot_task
 BOOT_TASK_SRC     = ../../software/boot_task/riscv/boot_task.asm
 

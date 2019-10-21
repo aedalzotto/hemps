@@ -106,7 +106,7 @@ def generate_repository(yaml_r, apps_name_list, processor_arch):
 	tool_prefix = "mips-elf-"
 	if processor_arch == "riscv":
 		elf_ext = ".elf"
-		tool_prefix = "riscv-sifive-elf-"
+		tool_prefix = "riscv64-unknown-elf-"
 
 	print "\n***************** task page size report ***********************"
     
