@@ -454,8 +454,8 @@ namespace Timings {
 	static const uint32_t DECODE = 1;
 	static const uint32_t LOGICAL = 1;
 	static const uint32_t MUL = 4;
-	static const uint32_t DIV = 16;
-	static const uint32_t CSR = 2;
+	static const uint32_t DIV = 4;
+	static const uint32_t CSR = 1;
 	static const uint32_t FETCH = 1;
 };
 
