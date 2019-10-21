@@ -120,5 +120,16 @@ enum PROC_REGS {
 	REG_V1 = 11
 };
 
-extern inline unsigned int MemoryRead(volatile unsigned int address);
-extern inline void MemoryWrite(volatile unsigned int address, unsigned int value);
+inline unsigned int MemoryRead(volatile unsigned int address)
+{
+	unsigned int value = *(volatile unsigned int*)address;
+	// value = __bswap_constant_32(value);
+	return value;
+}
+
+inline void MemoryWrite(volatile unsigned int address, unsigned int value)
+{
+	// Char array doesn't need swap
+	// value = __bswap_constant_32(value);
+	*(volatile unsigned int*)address = value;
+}

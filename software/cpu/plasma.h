@@ -124,8 +124,15 @@ enum PROC_REGS {
 	REG_LO = 27
 };
 
-extern inline unsigned int MemoryRead(volatile unsigned int address);
-extern inline void MemoryWrite(volatile unsigned int address, unsigned int value);
+inline unsigned int MemoryRead(volatile unsigned int address)
+{
+	return *(volatile unsigned int*)address;
+}
+
+inline void MemoryWrite(volatile unsigned int address, unsigned int value)
+{
+	*(volatile unsigned int*)address = value;
+}
 
 #endif /*__PLASMA_H__*/
 
