@@ -839,6 +839,7 @@ int main(){
 	idle_tcb.pc = (unsigned int) &OS_Idle;
 	idle_tcb.id = 0;
 	idle_tcb.offset = 0;
+	idle_tcb.reg[REG_SP] = PAGE_SIZE;
 
 	total_slack_time = 0;
 
@@ -863,10 +864,6 @@ int main(){
 
 	/*enables timeslice counter and wrapper interrupts*/
 	OS_InterruptMaskSet(IRQ_SCHEDULER | IRQ_NOC | IRQ_PENDING_SERVICE | IRQ_SLACK_TIME);
-
-	// https://stackoverflow.com/questions/20059673/print-out-value-of-stack-pointer
-	void* p = NULL;	// This will be allocated in the stack. This pointer address is the stack pointer value.
-	idle_tcb.reg[2] = &p;
 
 	/*runs the scheduled task*/
 	ASM_RunScheduledTask(current);
