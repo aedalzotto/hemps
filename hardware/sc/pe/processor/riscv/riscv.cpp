@@ -161,17 +161,17 @@ bool RiscV::handle_interrupts()
 	} else if((mip.read() & mie.read() & mideleg.read()) && // Supervisor-level interrupt
 				(priv.get() == Privilege::Level::USER || 	// U-Mode can't mask
 				(priv.get() == Privilege::Level::SUPERVISOR && mstatus.SIE()))){ // S-Mode interrupt enabled
-		if(mip.MEI() && mie.MEI() && !mideleg.MEI()) // Machine External Interrupt
+		if(mip.MEI() && mie.MEI() && mideleg.MEI()) // Machine External Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::MEI;
-		else if(mip.MSI() && mie.MSI() && !mideleg.MSI()) // Machine Software Interrupt
+		else if(mip.MSI() && mie.MSI() && mideleg.MSI()) // Machine Software Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::MSI;
-		else if(mip.MTI() && mie.MTI() && !mideleg.MTI()) // Machine Timer Interrupt
+		else if(mip.MTI() && mie.MTI() && mideleg.MTI()) // Machine Timer Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::MTI;
-		else if(mip.SEI() && mie.SEI() && !mideleg.SEI()) // Supervisor External Interrupt
+		else if(mip.SEI() && mie.SEI() && mideleg.SEI()) // Supervisor External Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::SEI;
-		else if(mip.SSI() && mie.SSI() && !mideleg.SSI()) // Supervisor Software Interrupt
+		else if(mip.SSI() && mie.SSI() && mideleg.SSI()) // Supervisor Software Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::SSI;
-		else if(mip.STI() && mie.STI() && !mideleg.STI()) // Supervisor Timer Interrupt
+		else if(mip.STI() && mie.STI() && mideleg.STI()) // Supervisor Timer Interrupt
 			scause.exception_code() = (uint32_t)Interrupts::CODE::STI;
 		
 		scause.interrupt() = 1;
@@ -210,6 +210,7 @@ bool RiscV::paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code)
 {
 	if(priv.get() == Privilege::Level::MACHINE ||	// M-Mode is bare mode
 		(satp.MODE() == Satp::MODES::BARE && mrar.MODE() == Mrar::MODES::SATP)){
+		current_page.write(0);
 		dst_addr.write(src_addr.read());
 		return false;
 	} else if(mrar.MODE() == Mrar::MODES::OFFSET){		
@@ -220,7 +221,6 @@ bool RiscV::paging(Address src_addr, Address &dst_addr, Exceptions::CODE e_code)
 			return false;
 		} else { // U-Mode with offset
 			current_page.write(mrar.read()>>PAGE_SHIFT);
-			sc_uint<XLEN> offset;
 			dst_addr.write(src_addr.read() | mrar.read());
 			return false;
 		}
@@ -1676,11 +1676,21 @@ bool RiscV::csrrw()
 	uint32_t wmor  =  0;
 	uint32_t rm    = -1;
 
+	bool wo = false;
+	if(!instr.rd())	// WO instruction
+		wo = true;
+
 	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
 		return true;	// Exception has been raised.
 
-	x[instr.rd()].write(csr->read() & rm);
-	csr->write((x[instr.rs1()].read() & wmand) | wmor);
+	// Initial value of rs1 in case rd==rs1.
+	Register buffer;
+	buffer.write(x[instr.rs1()].read());
+
+	if(!wo)
+		x[instr.rd()].write(csr->read() & rm);
+
+	csr->write((buffer.read() & wmand) | wmor);
 
 	return false;
 }
@@ -1698,12 +1708,16 @@ bool RiscV::csrrs()
 	if(!instr.rs1())	// RO instruction
 		rw = false;
 
-	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+	if(csr_helper(instr.imm_11_0(), rw, csr, wmand, wmor, rm))
 		return true;	// Exception has been raised.
+
+	// Initial value of rs1 in case rd==rs1.
+	Register buffer;
+	buffer.write(x[instr.rs1()].read());
 
 	x[instr.rd()].write(csr->read() & rm);
 	if(rw)
-		csr->write(((x[instr.rd()].read() | x[instr.rs1()].read()) & wmand) | wmor);
+		csr->write(((x[instr.rd()].read() | buffer.read()) & wmand) | wmor);
 
 	return false;
 }
@@ -1724,9 +1738,13 @@ bool RiscV::csrrc()
 	if(csr_helper(instr.imm_11_0(), rw, csr, wmand, wmor, rm))
 		return true;	// Exception has been raised.
 
+	// Initial value of rs1 in case rd==rs1.
+	Register buffer;
+	buffer.write(x[instr.rs1()].read());
+
 	x[instr.rd()].write(csr->read() & rm);
 	if(rw)
-		csr->write(((~x[instr.rd()].read() & x[instr.rs1()].read()) & wmand) | wmor);
+		csr->write(((x[instr.rd()].read() & ~buffer.read()) & wmand) | wmor);
 
 	return false;
 }
@@ -1740,10 +1758,15 @@ bool RiscV::csrrwi()
 	uint32_t wmor  =  0;
 	uint32_t rm    = -1;
 
+	bool wo = false;
+	if(!instr.rd())	// WO instruction
+		wo = true;
+
 	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
 		return true;	// Exception has been raised.
 
-	x[instr.rd()].write(csr->read() & rm);
+	if(!wo)
+		x[instr.rd()].write(csr->read() & rm);
 	csr->write(((uint32_t)instr.rs1() & wmand) | wmor);
 
 	return false;
@@ -1762,12 +1785,12 @@ bool RiscV::csrrsi()
 	if(!instr.rs1())	// RO instruction
 		rw = false;
 
-	if(csr_helper(instr.imm_11_0(), true, csr, wmand, wmor, rm))
+	if(csr_helper(instr.imm_11_0(), rw, csr, wmand, wmor, rm))
 		return true;	// Exception has been raised.
 
 	x[instr.rd()].write(csr->read() & rm);
 	if(rw)
-		csr->write((((uint32_t)instr.rs1() | x[instr.rs1()].read()) & wmand) | wmor);
+		csr->write(((x[instr.rd()].read() | (uint32_t)instr.rs1()) & wmand) | wmor);
 
 	return false;
 }
@@ -1790,7 +1813,7 @@ bool RiscV::csrrci()
 
 	x[instr.rd()].write(csr->read() & rm);
 	if(rw)
-		csr->write(((~(uint32_t)instr.rs1() & x[instr.rs1()].read()) & wmand) | wmor);
+		csr->write(((x[instr.rd()].read() & ~(uint32_t)instr.rs1()) & wmand) | wmor);
 
 	return false;
 }
