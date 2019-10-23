@@ -17,22 +17,25 @@ _start:
 	
 	li		sp,sp_addr	# Stack to top
 
-	# Configure system status MPP=3, MPIE=1, MIE=0
-	li		t0, 0x1880
-	csrw	mstatus, t0
+	# Configure system status MPP=0, MPIE=0, MIE=0
+	csrw	mstatus, zero
 	
-	# Clear interrupts
-	csrw	mip, zero
-
-	# Enable MEI when unmasked
+	# Enable MEI when unmasked (if MIE=1)
 	li		t0, 0x800
 	csrw	mie, t0
+
+	# Clear pending interrupts
+	csrw	mip, zero
+
+	# Disable S-Mode int/exc handling
+	# Handle them in M-Mode
+	csrw	mideleg, zero
+	csrw	medeleg, zero
 
 	# Configure Syscall
 	la		t0,vector_entry		# Load the vector_entry address to t0
 	csrw	mtvec,t0			# Write vector_entry address to mtvec
 								# Last bit is 0, means DIRECT mode
-
 	# Configure addressing
 	csrw	0x7C0,zero			# Clear offset addressing
 
