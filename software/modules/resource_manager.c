@@ -14,45 +14,10 @@
  * function in only used in the global master mode
  */
 
-#include "resource_manager.h"
-
-#include "../../include/kernel_pkg.h"
 #include "utils.h"
 #include "processors.h"
 #include "applications.h"
-
-/** Allocate resources to a Cluster by decrementing the number of free resources. If the number of resources
- * is higher than free_resources, then free_resourcers receives zero, and the remaining of resources are allocated
- * by reclustering
- * \param cluster_index Index of cluster to allocate the resources
- * \param nro_resources Number of resource to allocated. Normally is the number of task of an application
- */
-inline void allocate_cluster_resource(int cluster_index, int nro_resources){
-
-	//puts(" Cluster address "); puts(itoh(cluster_info[cluster_index].master_x << 8 | cluster_info[cluster_index].master_y)); puts(" resources "); puts(itoa(cluster_info[cluster_index].free_resources));
-
-	if (cluster_info[cluster_index].free_resources > nro_resources){
-		cluster_info[cluster_index].free_resources -= nro_resources;
-	} else {
-		cluster_info[cluster_index].free_resources = 0;
-	}
-
-	//putsv(" ALLOCATE - nro resources : ", cluster_info[cluster_index].free_resources);
-}
-
-/** Release resources of a Cluster by incrementing the number of free resources according to the nro of resources
- * by reclustering
- * \param cluster_index Index of cluster to allocate the resources
- * \param nro_resources Number of resource to release. Normally is the number of task of an application
- */
-inline void release_cluster_resources(int cluster_index, int nro_resources){
-
-	//puts(" Cluster address "); puts(itoh(cluster_info[cluster_index].master_x << 8 | cluster_info[cluster_index].master_y)); puts(" resources "); puts(itoa(cluster_info[cluster_index].free_resources));
-
-	cluster_info[cluster_index].free_resources += nro_resources;
-
-   // putsv(" RELEASE - nro resources : ", cluster_info[cluster_index].free_resources);
-}
+#include "resource_manager.h"
 
 /** This function is called by kernel manager inside it own code and in the modules: reclustering and cluster_scheduler.
  * It is called even when a task is mapped into a processor, by normal task mapping or reclustering.

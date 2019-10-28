@@ -31,9 +31,14 @@ typedef struct {
 } Reclustering;
 
 extern unsigned int clusterID; //!<Cluster ID index of array cluster_info - clusterID is the only extern global variable in in all software
+extern Reclustering reclustering;
 
-
-extern inline int is_reclustering_NOT_active();
+/**Test if the reclustering is not active
+ * \return 1 if is not active, 0 if is active
+ */
+static inline int is_reclustering_NOT_active(){
+	return !reclustering.active;
+}
 
 void reclustering_setup(int);
 

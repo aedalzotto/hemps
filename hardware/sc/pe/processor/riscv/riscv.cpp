@@ -16,7 +16,7 @@
 SC_MODULE_EXPORT(RiscV);
 #endif
 
-const uint8_t RiscV::PAGE_SHIFT = (unsigned char)(log10(PAGE_SIZE_BYTES)/log10(2));
+const uint8_t RiscV::PAGE_SHIFT = (unsigned char)(log2(PAGE_SIZE_BYTES));
 
 RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) : 
 				sc_module(name_), router_addr(router_addr_),

@@ -15,12 +15,12 @@
  */
 
 
-#include "reclustering.h"
 #include "../include/services.h"
 #include "utils.h"
 #include "resource_manager.h"
 #include "processors.h"
 #include "packet.h"
+#include "reclustering.h"
 
 #define RECLUSTERING_DEBUG	0		//!<When enable compile the puts in this file
 
@@ -56,13 +56,6 @@ void reclustering_setup(int c_id){
 	} else {
 		max_neighbors_level = (YDIMENSION/YCLUSTER) - 1;
 	}
-}
-
-/**Test if the reclustering is not active
- * \return 1 if is not active, 0 if is active
- */
-inline int is_reclustering_NOT_active(){
-	return !reclustering.active;
 }
 
 /**Assembles and sends a LOAN_PROCESSOR_REQUEST packet to the neighbor master kernel
