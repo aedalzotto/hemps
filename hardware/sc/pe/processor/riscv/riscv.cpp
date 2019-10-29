@@ -193,7 +193,7 @@ bool RiscV::handle_interrupts()
 
 bool RiscV::fetch()
 {
-	wait(Timings::FETCH);
+	// wait(Timings::FETCH);
 	Address phy_pc;
 	if(paging(pc, phy_pc, Exceptions::CODE::INSTRUCTION_PAGE_FAULT))
 		return true;
@@ -298,9 +298,9 @@ void RiscV::mem_write(sc_uint<34> address, xlenreg_t value, uint8_t byte)
 	mem_address.write(address);
 	mem_data_w.write(value);
 	mem_byte_we.write(byte);	// Enable write
-	wait(1);
-	mem_byte_we.write(0);		// Disable write
 	wait(Timings::MEM_WRITE);
+	mem_byte_we.write(0);		// Disable write
+	//wait(Timings::MEM_WRITE);
 }
 
 void RiscV::handle_exceptions(Exceptions::CODE code)
@@ -368,7 +368,7 @@ void RiscV::handle_exceptions(Exceptions::CODE code)
 
 bool RiscV::decode()
 {
-	wait(Timings::DECODE);
+	// wait(Timings::DECODE);
 	// First level of decoding. Decode the opcode
 	switch(instr.opcode()){
 	case (uint32_t)Instructions::OPCODES::OP_IMM:
@@ -1067,6 +1067,9 @@ bool RiscV::lb()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
+	while(mem_pause.read())
+		wait(1);
+
 	if(offset == 3){	// MSB
 		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31, 24);
 	} else if(offset == 2){
@@ -1104,6 +1107,9 @@ bool RiscV::lh()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
+	while(mem_pause.read())
+		wait(1);
+
 	if(!offset){	// LSW
 		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15, 0);
 	} else {		// MSW
@@ -1137,6 +1143,9 @@ bool RiscV::lw()
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
 
+	while(mem_pause.read())
+		wait(1);
+
 	x[instr.rd()].write(mem_read(phy_addr.read()));
 	return false;
 }
@@ -1159,6 +1168,9 @@ bool RiscV::lbu()
 	Address phy_addr;
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
+
+	while(mem_pause.read())
+		wait(1);
 
 	if(offset == 3){	// MSB
 		x[instr.rd()].range(7, 0) = mem_read(phy_addr.read()).range(31, 24);
@@ -1196,6 +1208,9 @@ bool RiscV::lhu()
 	Address phy_addr;
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::LOAD_PAGE_FAULT))
 		return true;
+
+	while(mem_pause.read())
+		wait(1);
 
 	if(!offset){	// LSW
 		x[instr.rd()].range(15, 0) = mem_read(phy_addr.read()).range(15, 0);
@@ -1241,6 +1256,10 @@ bool RiscV::sb()
 
 	uint32_t byte_write = x[instr.rs2()].read().range(7, 0);
 	byte_write |= (byte_write << 24) | (byte_write << 16) | (byte_write << 8);
+
+	while(mem_pause.read())
+		wait(1);
+
 	mem_write(phy_addr.read(), byte_write, offset);
 
 	return false;
@@ -1278,6 +1297,10 @@ bool RiscV::sh()
 
 	uint32_t byte_write = x[instr.rs2()].read().range(15, 0);
 	byte_write |= (byte_write << 16);
+
+	while(mem_pause.read())
+		wait(1);
+
 	mem_write(phy_addr.read(), byte_write, offset);
 
 	return false;
@@ -1307,6 +1330,9 @@ bool RiscV::sw()
 	Address phy_addr;
 	if(paging(vir_addr, phy_addr, Exceptions::CODE::STORE_AMO_PAGE_FAULT))
 		return true;
+
+	while(mem_pause.read())
+		wait(1);
 
 	mem_write(phy_addr.read(), x[instr.rs2()].read(), 0xF);
 
