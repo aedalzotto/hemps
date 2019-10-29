@@ -1,0 +1,42 @@
+hw:
+  page_size_KB: 32
+  tasks_per_PE: 3             # Typical: 1 - 6
+  repository_size_MB: 1
+  model_description: sc
+  noc_buffer_size: 8
+  mpsoc_dimension: [4,4]
+  cluster_dimension: [2,2]
+  master_location: LB
+  processor_arch: riscv
+
+apps:
+  # - name: aes               # OK!!!
+  #   start_time_ms: 0
+  # - name: audio_video       # Needs softfp
+  #   start_time_ms: 0
+  # - name: build_test        # OK!!!
+  #   start_time_ms: 2
+  # - name: dijkstra          # OK!!!
+  #   start_time_ms: 0
+  # - name: dtw               # OK!!!
+  #   start_time_ms: 0
+  # - name: fixe_base_test_16 # DEFECTIVE APP?
+  #   start_time_ms: 0
+  # - name: hello_world_app   # OK!!!
+  #   start_time_ms: 0
+  # - name: mpeg              # OK!!!
+  #   start_time_ms: 0
+  # - name: MPEG4             # Freezes
+  #   start_time_ms: 0
+  # - name: MWD               # OK!!!
+  #   start_time_ms: 0
+  # - name: pc1               # OK!!!
+  #   start_time_ms: 0
+  # - name: pc2               # OK!!!
+  #   start_time_ms: 0
+  # - name: prod_cons         # OK!!!
+  #   start_time_ms: 0
+  # - name: synthetic         # OK!!!
+  #   start_time_ms: 0
+  # - name: VOPD              # OK!!!
+  #   start_time_ms: 0
