@@ -93,7 +93,7 @@ def generate_sw_pkg( yaml_r ):
     file_lines.append("#define YCLUSTER                    "+str(y_cluster_dim)+"     //cluster y dimension\n")
     file_lines.append("#define CLUSTER_NUMBER              "+str(master_number)+"     //total number of cluster\n")
     file_lines.append("#define APP_NUMBER                  "+str(apps_number)+"     //max number of APPs described into testcase file\n")
-    file_lines.append("#define MAX_STATIC_TASKS            "+static_lenght+"      //max number of tasks mapped statically \n\n")
+    file_lines.append("#define MAX_STATIC_APPS             "+static_lenght+"      //max number of tasks mapped statically \n\n")
     
     
     
@@ -114,8 +114,8 @@ def generate_sw_pkg( yaml_r ):
     
     #Check if the list is not emply
     if static_mapping_list:
-        file_lines.append("//Stores the task static mapping. It is a list of tuple = {task_id, mapped_proc}\n")
-        file_lines.append("extern unsigned int static_map[MAX_STATIC_TASKS][2];\n\n")
+        file_lines.append("//Stores the app static mapping. It is a list of tuple = {app_id, cluster}\n")
+        file_lines.append("extern unsigned int static_map[MAX_STATIC_APPS][2];\n\n")
 
     
     file_lines.append("#endif\n")
@@ -144,19 +144,19 @@ def generate_sw_pkg( yaml_r ):
         
         static_table_string = ""
         
-        #static_mapping_list is a list of tuple={task_id, proc} and static_tuple is one instance (one tuple) of this list
+        #static_mapping_list is a list of tuple={app_id, cluster} and static_tuple is one instance (one tuple) of this list
         for static_tuple in static_mapping_list:
             
-            task_id_str   = str ( static_tuple[0] )
-            task_proc_str = str ( static_tuple[1] )
+            app_id_str   = str ( static_tuple[0] )
+            app_cluster_str = str ( static_tuple[1] )
             
-            static_table_string = static_table_string + "{"+task_id_str+", "+task_proc_str+"}, "
+            static_table_string = static_table_string + "{"+app_id_str+", "+app_cluster_str+"}, "
         
         #Removes the lost ',' at the end of string
         static_table_string = static_table_string[0:len(static_table_string)-2] # 2 because the space, other else will be 1
         
-        file_lines.append("//Stores the task static mapping. It is a list of tuple = {task_id, mapped_proc}\n")
-        file_lines.append("unsigned int static_map[MAX_STATIC_TASKS][2] = {"+static_table_string+"};\n\n")
+        file_lines.append("//Stores the app static mapping. It is a list of tuple = {app_id, cluster}\n")
+        file_lines.append("unsigned int static_map[MAX_STATIC_APPS][2] = {"+static_table_string+"};\n\n")
             
             
     #Use this function to create any file into testcase, it automatically only updates the old file if necessary

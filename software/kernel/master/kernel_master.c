@@ -697,7 +697,7 @@ void handle_app_request(){
 	//TASK_DESCRIPTOR_SIZE is the size of each task description into repository -- see testcase_name/repository_debug.txt
 	app_descriptor_size = (TASK_DESCRIPTOR_SIZE * num_app_tasks) + 1; //plus 1 because the first address is the app task number
 
-	selected_cluster = SearchCluster(clusterID, num_app_tasks);
+	selected_cluster = SearchCluster(clusterID, num_app_tasks, app_id_counter);
 
 	puts("\nHandle application request from repository\n\tApplication address: "); puts(itoh((unsigned int)initial_address)); puts("\n");
 	putsv("\tapp id: ", app_id_counter);

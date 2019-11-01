@@ -97,48 +97,25 @@ def get_app_repo_size(yaml_reader):
 
 #------- Repository Generation Scope ------------------- 
 #ATTENTION: STATIC MAPPING ONLY WORKS IF THE APPS START TIME ARE ORDERED
-#This function serches for all task statically mapped and return a list of tuple={task_id, proc}
+#This function serches for all apps statically mapped and return a list of tuple={app_id, cluster_id}
 def get_static_mapping_list(yaml_reader):
     
     static_task_list = []
-    
-    app_id = 0
+
+    idx = 0
     #walk for all apps into yaml file
-    for app_n in yaml_reader["apps"]:
-        
-        app_name = app_n["name"]
-        
+    for app in yaml_reader["apps"]:        
         try:
             #Test if a given app have the static_mapping tag
-            static_mapping_tasks = yaml_reader["apps"][app_id]["static_mapping"]
-            
-            #In this point can be concluded that the app have some static mapping
-            #Then, list all tasks from app_name
-            app_task_list = get_app_task_name_list(".", app_name)
-            
-            task_id = 0
-            
-            #Walk over all static tasks
-            for static_task in static_mapping_tasks:
-                
-                if static_task in app_task_list:
-                    
-                    static_task_id = app_task_list.index(static_task)
-                    
-                    task_rel_id = app_id << 8 | static_task_id
-                    x_address = int( static_mapping_tasks[static_task][0] ) # Gets the x value
-                    y_address = int( static_mapping_tasks[static_task][1] ) # Gets the y value
-                    
-                    task_static_map = x_address << 8 | y_address
-                    
-                    static_task_list.append([task_rel_id, task_static_map])
-                    
-                else:
-                    print "[WARNING]: Static task name ["+static_task+"] does not belong to application [" + app_name+ "], it will be ignored in static mapping\n"
+            static_mapping_app = app["static_mapping"]
+
+            app_cluster = static_mapping_app["cluster"]
+
+            static_task_list.append([idx, app_cluster])
+
         except:
-            pass # This means that the application not has any task mapped statically
-        
-        app_id = app_id + 1
+            idx = idx + 1
+            pass # This means that the application will not be statically mapped
         
     return static_task_list
     

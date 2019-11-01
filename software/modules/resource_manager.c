@@ -66,25 +66,25 @@ int map_task(int task_id){
 
 	//putsv("Mapping call for task id ", task_id);
 
-#if MAX_STATIC_TASKS
-	//Test if the task is statically mapped
-	for(int i=0; i<MAX_STATIC_TASKS; i++){
+// #if MAX_STATIC_TASKS
+// 	//Test if the task is statically mapped
+// 	for(int i=0; i<MAX_STATIC_TASKS; i++){
 
-		//Test if task_id is statically mapped
-		if (static_map[i][0] == task_id){
-			puts("Task id "); puts(itoa(static_map[i][0])); puts(" statically mapped at processor"); puts(itoh(static_map[i][1])); puts("\n");
+// 		//Test if task_id is statically mapped
+// 		if (static_map[i][0] == task_id){
+// 			puts("Task id "); puts(itoa(static_map[i][0])); puts(" statically mapped at processor"); puts(itoh(static_map[i][1])); puts("\n");
 
-			proc_address = static_map[i][1];
+// 			proc_address = static_map[i][1];
 
-			if (get_proc_free_pages(proc_address) <= 0){
-				puts("ERROR: Processor not have free resources\n");
-				while(1);
-			}
+// 			if (get_proc_free_pages(proc_address) <= 0){
+// 				puts("ERROR: Processor not have free resources\n");
+// 				while(1);
+// 			}
 
-			return proc_address;
-		}
-	}
-#endif
+// 			return proc_address;
+// 		}
+// 	}
+// #endif
 
 	//Else, map the task following a CPU utilization based algorithm
 	for(int i=0; i<MAX_CLUSTER_SLAVES; i++){
@@ -162,13 +162,34 @@ int application_mapping(int cluster_id, int app_id){
 /**Selects a cluster to insert an application
  * \param GM_cluster_id cluster ID of the global manager processor
  * \param app_task_number Number of task of requered application
- * \return > 0 if mapping OK, -1 if there is not resources available
+ * \param app_id ID of the application that will be mapped
+ * \return > 0 if mapping OK, -1 if there are no resources available
 */
-int SearchCluster(int GM_cluster_id, int app_task_number) {
+int SearchCluster(int GM_cluster_id, int app_task_number, unsigned int app_id) {
 
 	int selected_cluster = -1;
 	int freest_cluster = 0;
 
+#if MAX_STATIC_APPS
+	// Test if the app is statically mapped
+	for(int i = 0; i < MAX_STATIC_APPS; i++){
+		//Test if app_id is statically mapped
+		if(static_map[i][0] == app_id){
+			puts("App id "); puts(itoa(static_map[i][0])); puts(" statically mapped at cluster "); puts(itoa(static_map[i][1])); puts("\n");
+
+			selected_cluster = static_map[i][1];
+
+			if(cluster_info[selected_cluster].free_resources < app_task_number){
+				puts("ERROR: Not enough resources in cluster "); puts(itoa(selected_cluster)); puts(" for "); puts(itoa(app_task_number)); puts(" tasks\n");
+				while(1);
+			}
+
+			return selected_cluster;
+		}
+	}
+#endif
+
+	// Else, dinamic map an application
 	for (int i=0; i<CLUSTER_NUMBER; i++){
 
 		if (i == GM_cluster_id) continue;
