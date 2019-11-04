@@ -58,6 +58,6 @@ int map_task(int);
 
 int application_mapping(int, int);
 
-int SearchCluster(int, int);
+int SearchCluster(int, int, unsigned int);
 
 #endif /* RESOURCE_MANAGER_H_ */
