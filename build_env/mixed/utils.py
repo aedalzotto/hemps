@@ -104,8 +104,8 @@ def create_cluster_list(x_mpsoc_dim, y_mpsoc_dim, x_cluster_dim, y_cluster_dim, 
 	cluster_list = []
 
 	idx = 0
-	for y in range(0, y_clusters_number):
-		for x in range(0, x_clusters_number):
+	for y in range(0, int(y_clusters_number)):
+		for x in range(0, int(x_clusters_number)):
 			leftbottom_x =   x  * x_cluster_dim
 			leftbottom_y =   y  * y_cluster_dim
 			topright_x   =   ( (x+1) *  x_cluster_dim ) - 1
