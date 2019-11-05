@@ -53,7 +53,7 @@ def build(yaml_path, sim_time, hemps_path):
 	copy_apps(hemps_path, test_name, riscv_app_names, mipsi_app_names)
 	copy_makefiles(hemps_path, test_name, page_size_KB, memory_size_KB, riscv_app_names, mipsi_app_names, sim_time, clusters)
 
-    # #Create other importatants dirs
+	#Create other importatants dirs
 	create_ifn_exists(test_name+"/include")
 	create_ifn_exists(test_name+"/log")
     
@@ -77,6 +77,11 @@ def copy_scripts(hemps_path, testcase_path):
 def copy_kernel(hemps_path, testcase_path):
 	source_sw_path = hemps_path+"/software"
 	testcase_sw_path = testcase_path+"/software"
+
+	create_ifn_exists(testcase_sw_path)
+	create_ifn_exists(testcase_sw_path+"/riscv")
+	create_ifn_exists(testcase_sw_path+"/mipsi")
+
 	#--------------  COPIES ALL THE FILES .H AND .C FROM SOFTWARE DIRECTORY ----------------
 	generic_copy(source_sw_path, testcase_sw_path, [".svn"])
 
@@ -162,13 +167,13 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, risc
 	for cluster in clusters:
 		if cluster["arch"] == "mipsi":
 			copyfile(makes_dir + "hardware/mipsi.mk", testcase_path+"/hardware/mipsi.mk")
-			copyfile(makes_dir + "software/mipsi.mk", testcase_path+"/software/mipsi.mk")
+			copyfile(makes_dir + "software/mipsi.mk", testcase_path+"/software/mipsi/makefile")
 			break
 
 	for cluster in clusters:
 		if cluster["arch"] == "riscv":
 			copyfile(makes_dir + "hardware/riscv.mk", testcase_path+"/hardware/riscv.mk")
-			copyfile(makes_dir + "software/riscv.mk", testcase_path+"/software/riscv.mk")
+			copyfile(makes_dir + "software/riscv.mk", testcase_path+"/software/riscv/makefile")
 			break
 
 	copyfile(makes_dir + "testcase.mk", testcase_path + "/makefile")

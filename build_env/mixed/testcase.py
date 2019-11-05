@@ -36,7 +36,9 @@ class testcase:
 		return memory_size_KB
 
 	def get_clusters(self):
-		return self.reader["clusters"]
+		cluster_list = self.reader["clusters"]
+		# cluster_list = sorted(cluster_list, key=attrgetter("id"))
+		return cluster_list
 
 	def get_arch_app_names(self, arch):
 		clusters = self.get_clusters()
