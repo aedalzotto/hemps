@@ -67,7 +67,7 @@ def get_app_task_name_list(testcase_path, app_name, arch):
 def check_mem_size(arch, file_path, mem_size_KB):
 	tool_prefix = "mips-elf-"
 	if arch == "riscv":
-		tool_prefix = "riscv-unknown-elf-"
+		tool_prefix = "riscv64-unknown-elf-"
 
 	program_memory_size = int(subprocess.getoutput(tool_prefix+"size "+file_path+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f4"))
 

@@ -89,3 +89,5 @@ class testcase:
 		
 		return sorted_list
 		
+	def get_repository_size_MB(self):
+	    return self.reader["hw"]["repository_size_MB"]

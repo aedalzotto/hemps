@@ -1,7 +1,7 @@
 GREEN  =\033[0;32m
 NC   =\033[0m # No Color
 
-INCLUDE           = ../../software/include
+INCLUDE           = ../../../software/include
 
 CFLAGS            = -O2 -Wall -std=c99 -s
 GCC		          = riscv64-unknown-elf-gcc -march=rv32im -mabi=ilp32
@@ -10,7 +10,7 @@ LD		          = riscv64-unknown-elf-ld -melf32lriscv
 DUMP	          = riscv64-unknown-elf-objdump
 COPY	          = riscv64-unknown-elf-objcopy -O binary
 BOOT_TASK         = boot_task
-BOOT_TASK_SRC     = ../../software/boot_task/riscv/boot_task.asm
+BOOT_TASK_SRC     = ../../../software/boot_task/riscv/boot_task.asm
 
 TASK_SRC = $(wildcard *.c)
 TASK_OBJ = $(TASK_SRC:.c=.o)

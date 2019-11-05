@@ -169,7 +169,7 @@ def generate_repository(reader, app_list):
 
 #Receives a int, convert to string and fills to a 32 bits word
 def toX(input):
-	hex_string = "%x" % input
+	hex_string = "%x" % int(input)
 	#http://stackoverflow.com/questions/339007/nicest-way-to-pad-zeroes-to-string
 	return hex_string.zfill(8) # 8 is the lenght of chars to represent 32 bits (repo word) in hexa
 
@@ -183,7 +183,7 @@ def get_task_DATA_size(arch, app_name, task_name):
 	source_file = "applications/" + arch + "/" + app_name + "/" + task_name + ".elf"
 	tool_prefix = "mips-elf-"
 	if arch == "riscv":
-		tool_prefix = "riscv-unknown-elf-"
+		tool_prefix = "riscv64-unknown-elf-"
 
 	#https://www.quora.com/What-is-a-convenient-way-to-execute-a-shell-command-in-Python-and-retrieve-its-output
 	data_size = int (subprocess.getoutput(tool_prefix+"size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f2"))
@@ -199,7 +199,7 @@ def get_task_BSS_size(arch, app_name, task_name):
 	source_file = "applications/" + arch + "/" + app_name + "/" + task_name + ".elf"
 	tool_prefix = "mips-elf-"
 	if arch == "riscv":
-		tool_prefix = "riscv-unknown-elf-"
+		tool_prefix = "riscv64-unknown-elf-"
 
 	#https://www.quora.com/What-is-a-convenient-way-to-execute-a-shell-command-in-Python-and-retrieve-its-output
 	bss_size = int(subprocess.getoutput(tool_prefix+"size "+source_file+" | tail -1 | sed 's/ //g' | sed 's/\t/:/g' | cut -d':' -f3"))

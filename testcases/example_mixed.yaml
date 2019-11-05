@@ -10,7 +10,7 @@ hw:
 
 clusters:
   - id: 0   # GM cluster
-    arch: riscv
+    arch: mipsi
     apps:
       - name: synthetic
         start_time_ms: 0
