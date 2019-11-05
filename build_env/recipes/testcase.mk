@@ -9,10 +9,10 @@ update:
 	@cd ..; hemps-gen $(TC_NAME).yaml 1; cd $(TC_NAME); make clean; make all; cd ..;
 	
 banner:
-	@python2 build/banner.py
+	@python build/banner.py
 
 apps:
-	@python2 build/app_builder.py $(YAML_FILE)
+	@python build/applications.py $(YAML_FILE)
 	
 kernel:
 	@python2 build/kernel_builder.py $(YAML_FILE)
