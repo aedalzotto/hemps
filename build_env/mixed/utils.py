@@ -10,11 +10,12 @@ from shutil import rmtree
 #------------ Python classes. See more in: http://www.tutorialspoint.com/python/python_classes_objects.htm
 #This class is used to store the start time information of applications, usefull into repository generation process
 class ApplicationStartTime:
-	def __init__(self, name, start_time_ms, repo_address, arch):
+	def __init__(self, name, start_time_ms, repo_address, arch, cid):
 		self.name = name
 		self.start_time_ms = start_time_ms #Stores the application descriptor repository address
 		self.repo_address = repo_address
 		self.arch = arch
+		self.cid = cid
 
 	def __hash__(self):
 		return hash((self.name, self.arch))

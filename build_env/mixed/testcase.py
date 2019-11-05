@@ -73,6 +73,7 @@ class testcase:
 			for app in cluster["apps"]:
 				name = app["name"]
 				arch = cluster["arch"]
+				cid = cluster["id"]
 
 				#If the time is not configured - default is zero
 				try:
@@ -82,7 +83,7 @@ class testcase:
 
 				repo_address = "-1"
 
-				app_start_time_list.append(ApplicationStartTime(name, start_time_ms.zfill(8), repo_address, arch))
+				app_start_time_list.append(ApplicationStartTime(name, start_time_ms.zfill(8), repo_address, arch, cid))
 				
 		#Sort objects by start time. See more in : https://wiki.python.org/moin/HowTo/Sorting
 		sorted_list = sorted(app_start_time_list, key=attrgetter('start_time_ms'))

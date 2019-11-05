@@ -296,3 +296,4 @@ def generate_appstart_file(app_list):
 
 if __name__ == "__main__":
 	main()
+	

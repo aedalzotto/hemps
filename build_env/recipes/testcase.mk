@@ -15,7 +15,7 @@ apps:
 	@python build/applications.py $(YAML_FILE)
 	
 kernel:
-	@python2 build/kernel_builder.py $(YAML_FILE)
+	@python build/software.py $(YAML_FILE)
 	
 hw:
 	@python2 build/hw_builder.py $(YAML_FILE)
