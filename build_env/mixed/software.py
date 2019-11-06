@@ -166,7 +166,7 @@ def generate_memory(x_mpsoc_dim, y_mpsoc_dim, cluster_list):
 				if x >= cluster.leftbottom_x and x <= cluster.topright_x and y >= cluster.leftbottom_y and y <= cluster.topright_y:
 					# PE is inside the found cluster
 					arch = cluster.arch
-					if x == cluster_list.master_x and y == cluster_list.master_y:
+					if x == cluster.master_x and y == cluster.master_y:
 						master_pe = True
 					break
 			

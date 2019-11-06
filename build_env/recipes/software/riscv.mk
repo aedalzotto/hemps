@@ -1,8 +1,8 @@
 RED  =\033[0;31m
 NC   =\033[0m 		# No Color
 
-KERNEL_PKG_TGT    = ../include/kernel_pkg.o
-KERNEL_PKG_SRC    = $(KERNEL_PKG_TGT:.o=.c) $(KERNEL_PKG_TGT:.o=.h)
+KERNEL_PKG_TGT    = kernel_pkg.o
+KERNEL_PKG_SRC    = ../../include/kernel_pkg.c
 
 CFLAGS				= -O2 -Wall
 LDFLAGS				= --no-relax
@@ -14,51 +14,48 @@ DUMP				= riscv64-unknown-elf-objdump
 COPY				= riscv64-unknown-elf-objcopy -O binary
 
 BOOT_MASTER       = boot_master
-BOOT_MASTER_SRC   = kernel/master/riscv/boot.S
+BOOT_MASTER_SRC   = ../kernel/master/riscv/boot.S
 KERNEL_MASTER 	  = kernel_master
-KERNEL_MASTER_SRC = kernel/master/kernel_master.c
-KERNEL_MASTER_H	  = kernel/master/kernel_master.h
+KERNEL_MASTER_SRC = ../kernel/master/kernel_master.c
 
 BOOT_SLAVE        = boot_slave
-BOOT_SLAVE_SRC	  = kernel/slave/riscv/boot.S
+BOOT_SLAVE_SRC	  = ../kernel/slave/riscv/boot.S
 KERNEL_SLAVE 	  = kernel_slave
-KERNEL_SLAVE_SRC  = kernel/slave/kernel_slave.c
-KERNEL_MASTER_H	  = kernel/slave/kernel_slave.h
+KERNEL_SLAVE_SRC  = ../kernel/slave/kernel_slave.c
 
 #https://www.gnu.org/software/make/manual/make.html#Automatic-Variables
-MODULES_DIR = modules/
+MODULES_DIR = ../modules
+MODULES_DEST = .
 MODULES_NAMES = utils packet applications pending_service reclustering new_task communication processors task_control task_location task_migration task_scheduler resource_manager
-MODULES_SRC = $(addsuffix .c, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) ) $(addsuffix .h, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
-MODULES_TGT = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(MODULES_NAMES) ) )
+MODULES_SRC = $(addsuffix .c, $(addprefix $(MODULES_DIR)/, $(MODULES_NAMES)))
+MODULES_TGT = $(addprefix $(MODULES_DEST)/,$(notdir $(MODULES_SRC:.c=.o)))
 
 CPU_DIR = cpu
-CPU_SRC = $(CPU_DIR)/riscv.c
-CPU_OBJ = $(CPU_DIR)/riscv.o
+CPU_SRC = ../$(CPU_DIR)/riscv.c
+CPU_OBJ = riscv.o
 
 KERNEL_MASTER_MODULES = utils packet applications reclustering new_task communication processors resource_manager
-KERNEL_MASTER_TGT     = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_MASTER_MODULES) ) )
+KERNEL_MASTER_TGT     = $(addsuffix .o, $(addprefix $(MODULES_DEST)/, $(KERNEL_MASTER_MODULES)))
 
 KERNEL_SLAVE_MODULES = utils packet pending_service communication task_control task_location task_migration task_scheduler
-KERNEL_SLAVE_TGT 	 = $(addsuffix .o, $(addprefix $(MODULES_DIR), $(KERNEL_SLAVE_MODULES) ) )
-
-$(info $(KERNEL_MASTER_TGT))
+KERNEL_SLAVE_TGT 	 = $(addsuffix .o, $(addprefix $(MODULES_DEST)/, $(KERNEL_SLAVE_MODULES)))
 
 default: $(KERNEL_MASTER).txt $(KERNEL_SLAVE).txt 
 
 $(KERNEL_PKG_TGT): $(KERNEL_PKG_SRC)
-	@printf "${RED}Compiling Kernel Package: %s ...${NC}\n" "$*.c"
-	@$(GCC) -c $*.c -o $*.o $(CFLAGS)
+	@printf "${RED}Compiling RISCV Kernel Package: %s ...${NC}\n" "$*.c"
+	@$(GCC) -c $< -o $*.o $(CFLAGS)
 
-$(MODULES_TGT): $(MODULES_SRC)
-	@printf "${RED}Compiling Kernel %s ...${NC}\n" "$*.c"
-	@$(GCC) -c $*.c -o $*.o $(CFLAGS)
-
-$(CPU_OBJ) : $(CPU_SRC)
-	@printf "${RED}Compiling Kernel CPU code: %s ...${NC}\n" "$*.c"
+$(MODULES_DEST)/%.o: $(MODULES_DIR)/%.c
+	@printf "${RED}Compiling RISCV Kernel %s ...${NC}\n" "$<"
 	@$(GCC) -c $< -o $@ $(CFLAGS)
 
-$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KERNEL_MASTER_H) $(BOOT_MASTER_SRC) $(CPU_OBJ)
-	@printf "${RED}Compiling Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
+$(CPU_OBJ) : $(CPU_SRC)
+	@printf "${RED}Compiling RISCV Kernel CPU code: %s ...${NC}\n" "$*.c"
+	@$(GCC) -c $< -o $@ $(CFLAGS)
+
+$(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(BOOT_MASTER_SRC) $(CPU_OBJ)
+	@printf "${RED}Compiling RISCV Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	@$(AS) $(BOOT_MASTER_SRC) -o $(BOOT_MASTER).o --defsym sp_addr=$(MEM_SP_INIT)
 	@$(GCC) -c $(KERNEL_MASTER_SRC) -o $(KERNEL_MASTER).o $(CFLAGS)
 	@$(LD) --section-start=".init"=0 -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
@@ -67,8 +64,8 @@ $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(KE
 	@$(COPY) $(KERNEL_MASTER).elf $(KERNEL_MASTER).bin
 	@hexdump -v -e '1/4 "%08x" "\n"' $(KERNEL_MASTER).bin > $(KERNEL_MASTER).txt
 
-$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(KERNEL_SLAVE_H) $(BOOT_SLAVE_SRC) $(CPU_OBJ)
-	@printf "${RED}Compiling Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
+$(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(BOOT_SLAVE_SRC) $(CPU_OBJ)
+	@printf "${RED}Compiling RISCV Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	@$(AS) $(BOOT_SLAVE_SRC) -o $(BOOT_SLAVE).o --defsym sp_addr=$(PAGE_SP_INIT)
 	@$(GCC) -c $(KERNEL_SLAVE_SRC) -o $(KERNEL_SLAVE).o $(CFLAGS)
 	@$(LD) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ) $(LDFLAGS)

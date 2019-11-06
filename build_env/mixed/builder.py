@@ -179,19 +179,19 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, risc
 	copyfile(makes_dir + "testcase.mk", testcase_path + "/makefile")
 
 	# Open the file (closing after scope) to append the PAGE_SP_INIT and MEM_SP_INIT value
-	make_file_path = testcase_path + "/software/makefile"
+	software_path = testcase_path + "/software/"
 
 	lines = []
 	lines.append("PAGE_SP_INIT = " + str((page_size_KB   * 1024)) + "\n")
 	lines.append("MEM_SP_INIT  = " + str((memory_size_KB * 1024)) + "\n")
-	append_lines_at_end_of_file(make_file_path, lines)
 
-	# Simple makefile to run "make" inside all subfolders
 	if len(riscv_app_names):
 		copyfile(makes_dir + "applications.mk", testcase_path + "/applications/riscv/makefile")
+		append_lines_at_end_of_file(software_path+"riscv/makefile", lines)
 
 	if len(mipsi_app_names):
 		copyfile(makes_dir + "applications.mk", testcase_path + "/applications/mipsi/makefile")
+		append_lines_at_end_of_file(software_path+"mipsi/makefile", lines)
 
 	for app_name in riscv_app_names:
 		make_app_path = testcase_path + "/applications/riscv/" + app_name + "/makefile"
