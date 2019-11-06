@@ -194,9 +194,10 @@ void pe::sequential_attr(){
 
 			uint32_t word = cpu_mem_data_write_reg.read();
 			char str[5] = {};
-		#ifdef MIPS_SIM
-			word = __builtin_bswap32(word);
-		#endif
+
+			if(!arch)
+				word = __builtin_bswap32(word);
+
 			memcpy(str, &word, 4);
 			fprintf(fp, "%s", str);
 

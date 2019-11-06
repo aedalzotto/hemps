@@ -74,7 +74,7 @@ SC_MODULE(hemps) {
 			sprintf(pe_name, "PE%dx%d", x_addr, y_addr);
 			printf("Creating PE %s\n", pe_name);
 
-			PE[j] = new pe(pe_name, r_addr);
+			PE[j] = new pe(pe_name, r_addr, pe_arch[j]);
 			PE[j]->clock(clock);
 			PE[j]->reset(reset);
 			PE[j]->address(mem_addr[j]);
