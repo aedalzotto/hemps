@@ -19,7 +19,7 @@ SC_MODULE_EXPORT(RiscV);
 const uint8_t RiscV::PAGE_SHIFT = (unsigned char)(log2(PAGE_SIZE_BYTES));
 
 RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) : 
-				sc_module(name_), router_addr(router_addr_),
+				CPU(name_, router_addr_),
 				mvendorid(0), marchid(0), mimpid(0), mhartid(0)
 {
 	pc_count				= 0;
@@ -30,20 +30,20 @@ RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) :
 	other_inst				= 0;
 	arith_inst				= 0;
 	load_inst				= 0;
-	shift_inst				= 0;	
-	nop_inst				= 0;	
+	shift_inst				= 0;
+	nop_inst				= 0;
 	mult_div_inst			= 0;
 	/* Instructions for PAGE 0 (KERNEL) */
 	global_inst_kernel		= 0;
 	logical_inst_kernel		= 0;
-	branch_inst_kernel		= 0;	
+	branch_inst_kernel		= 0;
 	jump_inst_kernel		= 0;
 	move_inst_kernel		= 0;
 	other_inst_kernel		= 0;
 	arith_inst_kernel		= 0;
 	load_inst_kernel		= 0;
-	shift_inst_kernel		= 0;	
-	nop_inst_kernel			= 0;	
+	shift_inst_kernel		= 0;
+	nop_inst_kernel			= 0;
 	mult_div_inst_kernel	= 0;
 	/* Instructions for PAGES different from 0 (TASKS) */
 	global_inst_tasks		= 0;
@@ -54,8 +54,8 @@ RiscV::RiscV(sc_module_name name_, half_flit_t router_addr_) :
 	other_inst_tasks		= 0;
 	arith_inst_tasks		= 0;
 	load_inst_tasks			= 0;
-	shift_inst_tasks		= 0;	
-	nop_inst_tasks			= 0;	
+	shift_inst_tasks		= 0;
+	nop_inst_tasks			= 0;
 	mult_div_inst_tasks		= 0;
 
 	SC_THREAD(cpu);

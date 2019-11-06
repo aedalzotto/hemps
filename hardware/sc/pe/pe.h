@@ -4,17 +4,16 @@
 
 #include <systemc.h>
 #include "../standards.h"
-#ifdef MIPS_SIM
-	#include "processor/plasma/mlite_cpu.h"
-#elif defined(RISCV_SIM)
-	#include "processor/riscv/riscv.h"
-#endif
+
+#include "processor/cpu.h"
+#include "processor/plasma/mlite_cpu.h"
+#include "processor/riscv/riscv.h"
+
 #include "dmni/dmni.h"
 #include "router/router_cc.h"
 #include "memory/ram.h"
 
 SC_MODULE(pe) {
-	
 	sc_in< bool >		clock;
 	sc_in< bool >		reset;
 	sc_signal < bool > 	clock_hold;
@@ -113,11 +112,9 @@ SC_MODULE(pe) {
 
 	unsigned char shift_mem_page;
 
-#ifdef MIPS_SIM
-	mlite_cpu	*	cpu;
-#elif defined(RISCV_SIM)
-	RiscV		*	cpu;
-#endif
+
+	CPU			*	cpu;
+
 	ram			* 	mem;
 	dmni 		*	dm_ni;
 	router_cc 	*	router;
@@ -142,6 +139,9 @@ SC_MODULE(pe) {
 	char aux[255];
 	FILE *fp;
 
+	regaddress router_address;
+	bool arch;
+
 	//logfilegen *log;
 	
 	void sequential_attr();
@@ -154,16 +154,17 @@ SC_MODULE(pe) {
 	void repo_to_mem_access();
 	
 	SC_HAS_PROCESS(pe);
-	pe(sc_module_name name_, regaddress address_ = 0x00) : sc_module(name_), router_address(address_) {
+	pe(sc_module_name name_, regaddress address_ = 0x00, bool arch_ = 0) : sc_module(name_), router_address(address_), arch(arch_) {
 
 		end_sim_reg.write(0x00000001);
 
 		shift_mem_page = (unsigned char) (log10(PAGE_SIZE_BYTES)/log10(2));
-	#ifdef MIPS_SIM
-		cpu = new mlite_cpu("cpu", router_address);
-	#elif defined(RISCV_SIM)
-		cpu = new RiscV("cpu", router_address);
-	#endif
+
+		if(arch)
+			cpu = new RiscV("cpu", router_address);
+		else
+			cpu = new mlite_cpu("cpu", router_address);
+
 		cpu->clk(clock_hold);
 		cpu->reset_in(reset);
 		cpu->intr_in(irq);
@@ -298,9 +299,7 @@ SC_MODULE(pe) {
 		sensitive << reset;
 
 	}
-	
-	public:
-		regaddress router_address;
+		
 };
 
 

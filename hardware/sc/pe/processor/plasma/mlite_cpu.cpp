@@ -534,7 +534,7 @@ void mlite_cpu::mlite() {
 
 						break;
 						default:
-							printf("\nPE:%x ERROR0 address=%lu opcode=%u\n",(int) address_router, state->pc,opcode);
+							printf("\nPE:%x ERROR0 address=%lu opcode=%u\n",(int) router_addr, state->pc,opcode);
 							return;
 					}
 				break;
@@ -650,7 +650,7 @@ void mlite_cpu::mlite() {
 						break;
 
 						default:
-							printf("\nPE: %x ERROR1 address=%lu opcode=%u\n",(int)address_router, state->pc,opcode);
+							printf("\nPE: %x ERROR1 address=%lu opcode=%u\n",(int)router_addr, state->pc,opcode);
 							return;
 					}
 				break;
@@ -1405,7 +1405,7 @@ void mlite_cpu::mlite() {
 		//      case 0x3e:/*SDC2*/ break;
 		//      case 0x3f:/*SDC3*/ break;
 				default:
-					printf("\nPE: %x ERROR2 address=%lu opcode=%u\n",(int)address_router, state->pc,opcode);
+					printf("\nPE: %x ERROR2 address=%lu opcode=%u\n",(int)router_addr, state->pc,opcode);
 					return;									
 			}	// switch()
 
