@@ -18,7 +18,7 @@ kernel:
 	@python build/software.py $(YAML_FILE)
 	
 hw:
-	@python2 build/hw_builder.py $(YAML_FILE)
+	@python build/hardware.py $(YAML_FILE)
 	
 clean-apps:
 	@make clean -C applications/

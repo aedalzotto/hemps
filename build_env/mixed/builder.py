@@ -166,16 +166,15 @@ def copy_makefiles(hemps_path, testcase_path, page_size_KB, memory_size_KB, risc
 
 	for cluster in clusters:
 		if cluster["arch"] == "mipsi":
-			copyfile(makes_dir + "hardware/mipsi.mk", testcase_path+"/hardware/mipsi.mk")
 			copyfile(makes_dir + "software/mipsi.mk", testcase_path+"/software/mipsi/makefile")
 			break
 
 	for cluster in clusters:
 		if cluster["arch"] == "riscv":
-			copyfile(makes_dir + "hardware/riscv.mk", testcase_path+"/hardware/riscv.mk")
 			copyfile(makes_dir + "software/riscv.mk", testcase_path+"/software/riscv/makefile")
 			break
 
+	copyfile(makes_dir + "hardware.mk", testcase_path+"/hardware/makefile")
 	copyfile(makes_dir + "testcase.mk", testcase_path + "/makefile")
 
 	# Open the file (closing after scope) to append the PAGE_SP_INIT and MEM_SP_INIT value

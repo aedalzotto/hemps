@@ -93,4 +93,13 @@ class testcase:
 		return sorted_list
 		
 	def get_repository_size_MB(self):
-	    return self.reader["hw"]["repository_size_MB"]
+		return self.reader["hw"]["repository_size_MB"]
+
+	def get_repository_size_BYTES(self):
+		repo = self.get_repository_size_MB() * 1024 * 1024
+		return repo
+
+	def get_app_number(self):
+		number = len(self.get_arch_app_names("riscv")) + len(self.get_arch_app_names("mipsi"))
+		return number
+	
