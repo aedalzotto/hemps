@@ -4,35 +4,27 @@ hw:
   repository_size_MB: 1
   model_description: sc
   noc_buffer_size: 8
-  mpsoc_dimension: [4,4]
-  cluster_dimension: [2,2]
+  mpsoc_dimension: [3,3]
+  cluster_dimension: [3,3]
   master_location: LB
   processor_arch: riscv
 
 apps:
   # - name: aes               # OK!!!
   #   start_time_ms: 0
-  # - name: audio_video       # Needs softfp
+  # - name: audio_video       # Needs softfp for RISC-V
   #   start_time_ms: 0
-  # - name: build_test        # OK!!!
-  #   start_time_ms: 2
   # - name: dijkstra          # OK!!!
   #   start_time_ms: 0
   # - name: dtw               # OK!!!
   #   start_time_ms: 0
-  # - name: fixe_base_test_16 # DEFECTIVE APP?
-  #   start_time_ms: 0
-  # - name: hello_world_app   # OK!!!
+  # - name: fixe_base_test_16 # Hangs soon after start on RISC-V and MIPS I
   #   start_time_ms: 0
   # - name: mpeg              # OK!!!
   #   start_time_ms: 0
-  # - name: MPEG4             # Freezes
+  # - name: MPEG4             # Force-closes RISC_0 task on RISC-V
   #   start_time_ms: 0
-  # - name: MWD               # OK!!!
-  #   start_time_ms: 0
-  # - name: pc1               # OK!!!
-  #   start_time_ms: 0
-  # - name: pc2               # OK!!!
+  # - name: MWD               # Hangs after a while on RISC-V and Plasma
   #   start_time_ms: 0
   # - name: prod_cons         # OK!!!
   #   start_time_ms: 0
