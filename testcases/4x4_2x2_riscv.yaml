@@ -4,20 +4,20 @@ hw:
   repository_size_MB: 1
   model_description: sc
   noc_buffer_size: 8
-  mpsoc_dimension: [3,3]
-  cluster_dimension: [3,3]
+  mpsoc_dimension: [4,4]
+  cluster_dimension: [2,2]
   master_location: LB
   processor_arch: riscv
 
 apps:
-  # - name: aes               # OK!!! - 9 tasks
-  #   start_time_ms: 0
+  - name: aes               # OK!!! - 9 tasks
+    start_time_ms: 0
   # - name: audio_video       # Needs softfp for RISC-V
   #   start_time_ms: 0
   # - name: dijkstra          # OK!!! - 7 tasks - Has problems with reclustering
   #   start_time_ms: 0
-  # - name: dtw               # OK!!! - 6 tasks
-  #   start_time_ms: 0
+  - name: dtw               # OK!!! - 6 tasks
+    start_time_ms: 0
   # - name: fixe_base_test_16 # Hangs soon after start on RISC-V and MIPS I
   #   start_time_ms: 0
   # - name: mpeg              # OK!!! - 5 tasks
@@ -26,9 +26,9 @@ apps:
   #   start_time_ms: 0
   # - name: MWD               # Hangs after a while on RISC-V and Plasma
   #   start_time_ms: 0
-  # - name: prod_cons         # OK!!! - 2 tasks
-  #   start_time_ms: 0
-  # - name: synthetic         # OK!!! - 6 tasks
-  #   start_time_ms: 0
+  - name: prod_cons         # OK!!! - 2 tasks
+    start_time_ms: 0
+  - name: synthetic         # OK!!! - 6 tasks
+    start_time_ms: 0
   # - name: VOPD              # OK!!! - 12 tasks - Has problems with reclustering
   #   start_time_ms: 0

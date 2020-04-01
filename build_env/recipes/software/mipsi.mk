@@ -57,21 +57,21 @@ $(KERNEL_MASTER).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_MASTER_SRC) $(BO
 	@printf "${RED}Compiling MIPSI Kernel Master: %s ...${NC}\n" "$(KERNEL_MASTER).c" 
 	@$(AS_MIPS) --defsym sp_addr=$(MEM_SP_INIT) -o $(BOOT_MASTER).o $(BOOT_MASTER_SRC)
 	@$(GCC_MIPS) -DHOP_NUMBER=1 -Dload -o $(KERNEL_MASTER).o $(KERNEL_MASTER_SRC) -D IS_MASTER
-	@$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
-	@$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD_MIPS) --section-start=".init"=0 -Map $(KERNEL_MASTER).map -s -N -o $(KERNEL_MASTER).elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD_MIPS) --section-start=".init"=0 -Map $(KERNEL_MASTER)_debug.map -o $(KERNEL_MASTER)_debug.elf $(BOOT_MASTER).o $(KERNEL_MASTER).o $(KERNEL_MASTER_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	@$(DUMP_MIPS) -S $(KERNEL_MASTER)_debug.elf > $(KERNEL_MASTER).lst
-	@$(COPY_MIPS) $(KERNEL_MASTER).elf $(KERNEL_MASTER).dump
-	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).dump > $(KERNEL_MASTER).txt
+	@$(COPY_MIPS) -R .MIPS.abiflags -R .reginfo $(KERNEL_MASTER).elf $(KERNEL_MASTER).bin
+	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_MASTER).bin > $(KERNEL_MASTER).txt
 
 $(KERNEL_SLAVE).txt: $(KERNEL_PKG_TGT) $(MODULES_TGT) $(KERNEL_SLAVE_SRC) $(BOOT_SLAVE_SRC) $(CPU_OBJ)
 	@printf "${RED}Compiling MIPSI Kernel Slave: %s ...${NC}\n" "$(KERNEL_SLAVE).c"
 	@$(AS_MIPS) --defsym sp_addr=$(PAGE_SP_INIT) -o $(BOOT_SLAVE).o $(BOOT_SLAVE_SRC)
 	@$(GCC_MIPS) -o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_SRC) -D PLASMA
-	@$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
-	@$(LD_MIPS) -Ttext 0 -eentry -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD_MIPS) --section-start=".init"=0 -Map $(KERNEL_SLAVE).map -s -N -o $(KERNEL_SLAVE).elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
+	@$(LD_MIPS) --section-start=".init"=0 -Map $(KERNEL_SLAVE)_debug.map -o $(KERNEL_SLAVE)_debug.elf $(BOOT_SLAVE).o $(KERNEL_SLAVE).o $(KERNEL_SLAVE_TGT) $(KERNEL_PKG_TGT) $(CPU_OBJ)
 	@$(DUMP_MIPS) -S $(KERNEL_SLAVE)_debug.elf > $(KERNEL_SLAVE).lst
-	@$(COPY_MIPS) $(KERNEL_SLAVE).elf $(KERNEL_SLAVE).dump
-	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_SLAVE).dump > $(KERNEL_SLAVE).txt
+	@$(COPY_MIPS) -R .MIPS.abiflags -R .reginfo $(KERNEL_SLAVE).elf $(KERNEL_SLAVE).bin
+	@hexdump -v -e '1/1 "%02x" 1/1 "%02x" 1/1 "%02x" 1/1 "%02x" "\n"' $(KERNEL_SLAVE).bin > $(KERNEL_SLAVE).txt
 
 clean:
 	@printf "Cleaning up\n"
@@ -81,5 +81,5 @@ clean:
 	@rm -rf *.map
 	@rm -rf *.lst
 	@rm -rf *.txt
-	@rm -rf *.dump
+	@rm -rf *.elf
 

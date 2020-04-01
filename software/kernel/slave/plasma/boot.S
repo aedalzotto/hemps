@@ -12,12 +12,12 @@
 ##
 ##------------------------------------------------------------------------------------------------
 
-        .text      
+        .section .init      
         .align  2
         .set noat
-        .globl  entry
-        .ent    entry
-entry:
+        .globl  _start
+        .ent    _start
+_start:
         .set noreorder
         
 		li $sp,sp_addr
@@ -27,6 +27,7 @@ entry:
 $L1:
         j $L1
         nop
+        .end _start
 
         .org 0x3c
 #address 0x3c
@@ -34,10 +35,15 @@ interrupt_service_routine_entry:
         j       interrupt_service_routine
         nop
 
+        .org 0x44
 #address 0x44
 system_service_routine_entry:  
         j       system_service_routine 
         nop
+
+        .section .text      
+        .align  2
+        .set noat
 
 #address 0x4c
 interrupt_service_routine:
@@ -168,7 +174,6 @@ system_service_restore:
         mtc0    $1,$12          # enables interrupts    
 
         .set    reorder 
-        .end    entry
         
 ###################################################
         

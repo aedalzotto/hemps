@@ -102,7 +102,7 @@ def generate_repository(yaml_r, apps_name_list, processor_arch):
 	#Used for point the next free address to fill with a given task code (task.txt file)
 	initial_address = 0 
 
-	elf_ext = ".bin"
+	elf_ext = ".elf"
 	tool_prefix = "mips-elf-"
 	if processor_arch == "riscv":
 		elf_ext = ".elf"
