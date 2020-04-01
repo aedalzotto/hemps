@@ -25,7 +25,7 @@ def main():
         sys.exit("\nError compiling kernel source code\n");
 
     tool_prefix="mips-elf-"
-    elf_ext=".bin"
+    elf_ext=".elf"
     if processor_arch == "riscv":
         tool_prefix="riscv64-unknown-elf-"
         elf_ext=".elf"
